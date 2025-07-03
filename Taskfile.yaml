@@ -1,0 +1,9 @@
+# Copyright (c) Kasefuchs
+# SPDX-License-Identifier: MPL-2.0
+
+---
+version: 3
+
+tasks:
+  add-copyright-headers:
+    cmd: go run github.com/hashicorp/copywrite headers
