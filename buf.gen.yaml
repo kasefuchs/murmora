@@ -1,0 +1,16 @@
+# Copyright (c) Kasefuchs
+# SPDX-License-Identifier: MPL-2.0
+
+---
+version: v2
+
+plugins:
+  - out: api/proto
+    opt:
+      - paths=source_relative
+    protoc_builtin: go
+
+  - out: api/proto
+    opt:
+      - paths=source_relative
+    protoc_builtin: go-grpc

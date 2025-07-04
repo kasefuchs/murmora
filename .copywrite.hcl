@@ -11,7 +11,10 @@ project {
 
   header_ignore = [
     # --- IDE / Editor ---
-    ".idea/*",
-    ".vscode/*"
+    ".idea/**",
+    ".vscode/**",
+    # --- Golang ---
+    # Protobuf artifacts
+    "**/*.pb.go"
   ]
 }

@@ -1,3 +1,7 @@
 # --- IDE / Editor ---
 .idea/
 .vscode/
+
+# --- Golang ---
+# Protobuf artifacts
+*.pb.go

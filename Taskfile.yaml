@@ -7,3 +7,9 @@ version: 3
 tasks:
   add-copyright-headers:
     cmd: go run github.com/hashicorp/copywrite headers
+
+  buf-generate:
+    cmd: go run github.com/bufbuild/buf/cmd/buf generate
+
+  buf-lint:
+    cmd: go run github.com/bufbuild/buf/cmd/buf lint
