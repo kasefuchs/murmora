@@ -5,11 +5,14 @@
 version: 3
 
 tasks:
-  add-copyright-headers:
+  license-headers:
     cmd: go run github.com/hashicorp/copywrite headers
 
-  buf-generate:
+  proto-gen:
     cmd: go run github.com/bufbuild/buf/cmd/buf generate
 
-  buf-lint:
+  proto-lint:
     cmd: go run github.com/bufbuild/buf/cmd/buf lint
+
+  go-fmt:
+    cmd: go run mvdan.cc/gofumpt -l -w .

@@ -5,6 +5,7 @@ go 1.24.4
 require (
 	github.com/bufbuild/buf v1.55.1
 	github.com/hashicorp/copywrite v0.22.0
+	mvdan.cc/gofumpt v0.8.0
 )
 
 require (
@@ -58,6 +59,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/google/cel-go v0.25.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-containerregistry v0.20.6 // indirect
 	github.com/google/go-github/v45 v45.2.0 // indirect
 	github.com/google/go-github/v72 v72.0.0 // indirect
