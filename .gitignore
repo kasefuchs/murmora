@@ -5,3 +5,8 @@
 # --- Golang ---
 # Protobuf artifacts
 *.pb.go
+*.pb.validate.go
+
+# --- Database ---
+# SQLite
+*.sqlite3

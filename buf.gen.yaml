@@ -14,3 +14,9 @@ plugins:
     opt:
       - paths=source_relative
     protoc_builtin: go-grpc
+
+  - out: api/proto
+    opt:
+      - lang=go
+      - paths=source_relative
+    protoc_builtin: validate

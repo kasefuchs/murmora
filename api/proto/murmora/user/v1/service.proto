@@ -1,0 +1,14 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.user.v1;
+
+import "murmora/user/v1/types.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/user/v1;user";
+
+service UserService {
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+}

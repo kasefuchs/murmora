@@ -8,11 +8,14 @@ tasks:
   license-headers:
     cmd: go run github.com/hashicorp/copywrite headers
 
+  proto-fmt:
+    cmd: go run github.com/bufbuild/buf/cmd/buf format -w ./api/proto
+
   proto-gen:
     cmd: go run github.com/bufbuild/buf/cmd/buf generate
 
   proto-lint:
-    cmd: go run github.com/bufbuild/buf/cmd/buf lint
+    cmd: go run github.com/bufbuild/buf/cmd/buf lint ./api/proto
 
   go-fmt:
     cmd: go run mvdan.cc/gofumpt -l -w .
