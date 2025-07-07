@@ -13,8 +13,12 @@ project {
     # --- IDE / Editor ---
     ".idea/**",
     ".vscode/**",
+
     # --- Golang ---
     # Protobuf artifacts
-    "**/*.pb.go"
+    "**/*.pb.go",
+
+    # --- Third party ---
+    "third_party/**"
   ]
 }

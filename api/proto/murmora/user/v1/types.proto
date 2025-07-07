@@ -15,13 +15,25 @@ message CreateUserRequest {
     max_len: 32
     pattern: "^[a-z0-9._]+$"
   }];
-
   string email = 2 [(validate.rules).string.email = true];
-
-  string password_hash = 3;
+  string password_hash = 3 [(validate.rules).string.min_len = 1];
 }
 
-message CreateUserResponse {
+message GetUserRequest {
+  oneof query {
+    option (validate.required) = true;
+
+    string id = 1 [(validate.rules).string.uuid = true];
+    string name = 2 [(validate.rules).string = {
+      min_len: 2
+      max_len: 32
+      pattern: "^[a-z0-9._]+$"
+    }];
+    string email = 3 [(validate.rules).string.email = true];
+  }
+}
+
+message UserResponse {
   string id = 1;
   string name = 2;
   string email = 3;

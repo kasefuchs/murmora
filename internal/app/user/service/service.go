@@ -19,7 +19,7 @@ type UserServiceServer struct {
 	userRepository *data.UserRepository
 }
 
-func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.CreateUserResponse, error) {
+func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -39,7 +39,45 @@ func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUs
 		return nil, status.Errorf(codes.AlreadyExists, "User already exists: %v", err)
 	}
 
-	return &user.CreateUserResponse{
+	return &user.UserResponse{
+		Id:           entity.ID.String(),
+		Name:         entity.Name,
+		Email:        entity.Email,
+		PasswordHash: entity.PasswordHash,
+	}, nil
+}
+
+func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	var err error
+	var entity *data.User
+
+	switch query := request.GetQuery().(type) {
+	case *user.GetUserRequest_Id:
+		entity, err = s.userRepository.FindByID(query.Id)
+
+	case *user.GetUserRequest_Name:
+		entity, err = s.userRepository.FindByName(query.Name)
+
+	case *user.GetUserRequest_Email:
+		entity, err = s.userRepository.FindByEmail(query.Email)
+
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid query type")
+	}
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error querying user: %v", err)
+	}
+
+	if entity == nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &user.UserResponse{
 		Id:           entity.ID.String(),
 		Name:         entity.Name,
 		Email:        entity.Email,
