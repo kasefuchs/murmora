@@ -1,0 +1,11 @@
+# Copyright (c) Kasefuchs
+# SPDX-License-Identifier: MPL-2.0
+
+---
+enable_reflection: true
+
+listen_address: 127.0.0.1:8082
+
+database:
+  type: sqlite
+  dsn: ./token.sqlite3

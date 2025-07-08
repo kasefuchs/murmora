@@ -1,0 +1,31 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.token.v1;
+
+import "google/protobuf/any.proto";
+import "validate/validate.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;token";
+
+message CreateTokenRequest {
+  google.protobuf.Any payload = 1 [(validate.rules).any.required = true];
+  bytes secret = 2 [(validate.rules).bytes.min_len = 32];
+}
+
+message CreateTokenResponse {
+  string id = 1;
+  string token = 2;
+}
+
+message ValidateTokenRequest {
+  string token = 1 [(validate.rules).string.pattern = "^[A-Za-z0-9-_]*\\.[A-Za-z0-9-_]*\\.[A-Za-z0-9-_]*$"];
+  bytes secret = 2 [(validate.rules).bytes.min_len = 32];
+}
+
+message ValidateTokenResponse {
+  string id = 1;
+  google.protobuf.Any payload = 2;
+}

@@ -5,6 +5,7 @@ go 1.24.4
 require (
 	github.com/bufbuild/buf v1.55.1
 	github.com/envoyproxy/protoc-gen-validate v1.2.1
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/copywrite v0.22.0
 	github.com/spf13/viper v1.20.1

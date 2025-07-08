@@ -1,0 +1,15 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.token.v1;
+
+import "murmora/token/v1/types.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;token";
+
+service TokenService {
+  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+}
