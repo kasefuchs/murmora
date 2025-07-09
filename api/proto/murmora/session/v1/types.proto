@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package murmora.session.v1;
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/session/v1;session";
+
+message SessionTokenPayload {
+  string session_id = 1;
+}
+
+message CreateSessionRequest {
+  string user_id = 1;
+}
+
+message CreateSessionResponse {
+  string id = 1;
+  string token = 2;
+}

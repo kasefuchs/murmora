@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package murmora.session.v1;
+
+import "murmora/session/v1/types.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/session/v1;session";
+
+service SessionService {
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+}
