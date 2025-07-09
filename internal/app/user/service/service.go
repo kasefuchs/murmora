@@ -19,7 +19,7 @@ type UserServiceServer struct {
 	userRepository *data.UserRepository
 }
 
-func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserResponse, error) {
+func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -39,7 +39,7 @@ func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUs
 		return nil, status.Errorf(codes.AlreadyExists, "User already exists: %v", err)
 	}
 
-	return &user.UserResponse{
+	return &user.UserDataResponse{
 		Id:           entity.ID.String(),
 		Name:         entity.Name,
 		Email:        entity.Email,
@@ -47,7 +47,7 @@ func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUs
 	}, nil
 }
 
-func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserResponse, error) {
+func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -77,7 +77,7 @@ func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequ
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &user.UserResponse{
+	return &user.UserDataResponse{
 		Id:           entity.ID.String(),
 		Name:         entity.Name,
 		Email:        entity.Email,

@@ -1,0 +1,35 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.authentication.v1;
+
+import "validate/validate.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1;authentication";
+
+message AuthenticationRegisterRequest {
+  string name = 1 [(validate.rules).string = {
+    min_len: 2
+    max_len: 32
+    pattern: "^[a-z0-9._]+$"
+  }];
+  string email = 2 [(validate.rules).string.email = true];
+  string password = 3 [(validate.rules).string = {
+    min_len: 8
+    max_len: 72
+  }];
+}
+
+message AuthenticationLoginRequest {
+  string email = 1 [(validate.rules).string.email = true];
+  string password = 2 [(validate.rules).string = {
+    min_len: 8
+    max_len: 72
+  }];
+}
+
+message AuthenticationTokenResponse {
+  string token = 1;
+}

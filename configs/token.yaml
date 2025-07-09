@@ -8,4 +8,4 @@ listen_address: 127.0.0.1:8082
 
 database:
   type: sqlite
-  dsn: ./token.sqlite3
+  dsn: ./configs/token.sqlite3

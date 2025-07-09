@@ -8,4 +8,4 @@ listen_address: 127.0.0.1:8081
 
 database:
   type: sqlite
-  dsn: ./user.sqlite3
+  dsn: ./configs/user.sqlite3

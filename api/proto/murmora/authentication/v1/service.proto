@@ -1,0 +1,15 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.authentication.v1;
+
+import "murmora/authentication/v1/types.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1;authentication";
+
+service AuthenticationService {
+  rpc Register(AuthenticationRegisterRequest) returns (AuthenticationTokenResponse);
+  rpc Login(AuthenticationLoginRequest) returns (AuthenticationTokenResponse);
+}

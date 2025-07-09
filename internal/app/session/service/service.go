@@ -5,15 +5,15 @@ package service
 
 import (
 	"context"
-	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
-	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/google/uuid"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
+	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
+	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
 	"github.com/kasefuchs/murmora/internal/app/session/data"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type SessionServiceServer struct {
@@ -35,7 +35,7 @@ func (s *SessionServiceServer) CreateSession(ctx context.Context, request *sessi
 		return nil, status.Errorf(codes.InvalidArgument, "Failed to parse user id: %v", err)
 	}
 
-	userResponse, err := s.userServiceClient.GetUser(ctx, &user.GetUserRequest{
+	userDataResponse, err := s.userServiceClient.GetUser(ctx, &user.GetUserRequest{
 		Query: &user.GetUserRequest_Id{
 			Id: userId.String(),
 		},
@@ -57,7 +57,7 @@ func (s *SessionServiceServer) CreateSession(ctx context.Context, request *sessi
 	}
 
 	tokenResponse, err := s.tokenServiceClient.CreateToken(ctx, &token.CreateTokenRequest{
-		Secret:  []byte(userResponse.PasswordHash),
+		Secret:  []byte(userDataResponse.PasswordHash),
 		Payload: tokenPayload,
 	})
 	if err != nil {
