@@ -9,7 +9,7 @@ import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/session/v1;session";
 
-message SessionTokenPayload {
+message TokenPayload {
   string session_id = 1;
 }
 

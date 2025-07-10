@@ -49,7 +49,7 @@ func (s *SessionServiceServer) CreateSession(ctx context.Context, request *sessi
 		return nil, status.Errorf(codes.Internal, "Failed to generate session ID: %v", err)
 	}
 
-	tokenPayload, err := anypb.New(&session.SessionTokenPayload{
+	tokenPayload, err := anypb.New(&session.TokenPayload{
 		SessionId: id.String(),
 	})
 	if err != nil {
