@@ -1,9 +1,8 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package database
+package client
 
 type Config struct {
-	Type string `koanf:"type"`
-	DSN  string `koanf:"dsn"`
+	Address string `koanf:"address"`
 }

@@ -9,7 +9,7 @@ import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1;authentication";
 
-message AuthenticationRegisterRequest {
+message RegisterRequest {
   string name = 1 [(validate.rules).string = {
     min_len: 2
     max_len: 32
@@ -22,7 +22,7 @@ message AuthenticationRegisterRequest {
   }];
 }
 
-message AuthenticationLoginRequest {
+message LoginRequest {
   string email = 1 [(validate.rules).string.email = true];
   string password = 2 [(validate.rules).string = {
     min_len: 8
@@ -30,6 +30,6 @@ message AuthenticationLoginRequest {
   }];
 }
 
-message AuthenticationTokenResponse {
+message TokenResponse {
   string token = 1;
 }

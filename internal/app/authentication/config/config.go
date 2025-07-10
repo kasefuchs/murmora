@@ -3,27 +3,13 @@
 
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/client"
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/server"
+)
 
 type Config struct {
-	ListenAddress     string `mapstructure:"listen_address"`
-	EnableReflection  bool   `mapstructure:"enable_reflection"`
-	UserServiceUrl    string `mapstructure:"user_service_url"`
-	SessionServiceUrl string `mapstructure:"session_service_url"`
-}
-
-func Load() (*Config, error) {
-	viper.SetConfigName("authentication")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("configs")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	cfg := &Config{}
-	err := viper.Unmarshal(cfg)
-
-	return cfg, err
+	Server         *server.Config `koanf:"server"`
+	UserService    *client.Config `koanf:"user_service"`
+	SessionService *client.Config `koanf:"session_service"`
 }

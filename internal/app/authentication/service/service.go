@@ -24,7 +24,7 @@ type AuthenticationServiceServer struct {
 	sessionServiceClient session.SessionServiceClient
 }
 
-func (s *AuthenticationServiceServer) Register(ctx context.Context, request *authentication.AuthenticationRegisterRequest) (*authentication.AuthenticationTokenResponse, error) {
+func (s *AuthenticationServiceServer) Register(ctx context.Context, request *authentication.RegisterRequest) (*authentication.TokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -50,12 +50,12 @@ func (s *AuthenticationServiceServer) Register(ctx context.Context, request *aut
 		return nil, status.Errorf(codes.Internal, "failed to create session: %s", err.Error())
 	}
 
-	return &authentication.AuthenticationTokenResponse{
+	return &authentication.TokenResponse{
 		Token: createSessionResponse.Token,
 	}, nil
 }
 
-func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authentication.AuthenticationLoginRequest) (*authentication.AuthenticationTokenResponse, error) {
+func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.TokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -85,7 +85,7 @@ func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authen
 		return nil, status.Errorf(codes.Internal, "Failed to create session: %s", err.Error())
 	}
 
-	return &authentication.AuthenticationTokenResponse{
+	return &authentication.TokenResponse{
 		Token: createSessionResponse.Token,
 	}, nil
 }

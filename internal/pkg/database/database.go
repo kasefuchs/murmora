@@ -6,6 +6,7 @@ package database
 import (
 	"errors"
 
+	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -15,33 +16,26 @@ type Database struct {
 	DB *gorm.DB
 }
 
-// New opens the data connection.
-func New(config *Config) (*Database, error) {
+// MustNew opens the data connection.
+func MustNew(config *Config) *Database {
 	dial, err := openDialector(config)
 	if err != nil {
-		return nil, err
+		log.Fatal().Err(err).Msg("Failed to open dialector")
 	}
 
 	db, err := gorm.Open(dial)
 	if err != nil {
-		return nil, err
+		log.Fatal().Err(err).Msg("Failed to connect to database")
 	}
 
-	return &Database{DB: db}, nil
+	return &Database{DB: db}
 }
 
-// Migrate runs auto migration.
-func (d *Database) Migrate(models ...interface{}) error {
-	return d.DB.AutoMigrate(models...)
-}
-
-// Close closes the data connection.
-func (d *Database) Close() error {
-	sqlDB, err := d.DB.DB()
-	if err != nil {
-		return err
+// MustMigrate runs auto migration.
+func (d *Database) MustMigrate(models ...interface{}) {
+	if err := d.DB.AutoMigrate(models...); err != nil {
+		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
-	return sqlDB.Close()
 }
 
 // openDialector returns dialector for specified configuration.

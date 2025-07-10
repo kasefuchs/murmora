@@ -5,29 +5,13 @@ package config
 
 import (
 	"github.com/kasefuchs/murmora/internal/pkg/database"
-	"github.com/spf13/viper"
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/client"
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/server"
 )
 
 type Config struct {
-	Database         *database.Config `mapstructure:"database"`
-	ListenAddress    string           `mapstructure:"listen_address"`
-	EnableReflection bool             `mapstructure:"enable_reflection"`
-	UserServiceUrl   string           `mapstructure:"user_service_url"`
-	TokenServiceUrl  string           `mapstructure:"token_service_url"`
-}
-
-func Load() (*Config, error) {
-	viper.SetConfigName("session")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("configs")
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	cfg := &Config{}
-	err := viper.Unmarshal(cfg)
-
-	return cfg, err
+	Server       *server.Config   `koanf:"server"`
+	Database     *database.Config `koanf:"database"`
+	UserService  *client.Config   `koanf:"user_service"`
+	TokenService *client.Config   `koanf:"token_service"`
 }

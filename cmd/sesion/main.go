@@ -4,70 +4,34 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net"
-
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
 	"github.com/kasefuchs/murmora/internal/app/session/config"
 	"github.com/kasefuchs/murmora/internal/app/session/data"
 	"github.com/kasefuchs/murmora/internal/app/session/service"
+	conf "github.com/kasefuchs/murmora/internal/pkg/config"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/client"
+	"github.com/kasefuchs/murmora/internal/pkg/grpc/server"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/grpc/reflection"
 )
 
 func main() {
-	cfg, err := config.Load()
-	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
-	}
+	cfg := conf.New[config.Config]()
+	cfg.MustLoadConfigFile("configs/session.hcl")
 
-	lis, err := net.Listen("tcp", cfg.ListenAddress)
-	if err != nil {
-		log.Fatalf("Error listening on %s: %v", cfg.ListenAddress, err)
-	}
-
-	fmt.Printf("Listening on: %v", lis.Addr().String())
-
-	db, err := database.New(cfg.Database)
-	if err != nil {
-		log.Fatalf("Error connecting to data: %v", err)
-	}
-
-	if err := db.Migrate(&data.Session{}); err != nil {
-		log.Fatalf("Error migrating data: %v", err)
-	}
-
-	userGrpcClient, err := grpc.NewClient(cfg.UserServiceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Error creating user grpc client: %v", err)
-	}
-
-	userServiceClient := user.NewUserServiceClient(userGrpcClient)
-
-	tokenGrpcClient, err := grpc.NewClient(cfg.TokenServiceUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Error creating token grpc client: %v", err)
-	}
-
-	tokenServiceClient := token.NewTokenServiceClient(tokenGrpcClient)
+	db := database.MustNew(cfg.Value.Database)
+	db.MustMigrate(&data.Session{})
 
 	sessionRepository := data.NewSessionRepository(db)
-	sessionServer := service.NewSessionServiceServer(sessionRepository, userServiceClient, tokenServiceClient)
 
-	grpcServer := grpc.NewServer()
+	userServiceClient := client.MustNew(cfg.Value.UserService, user.NewUserServiceClient)
+	tokenServiceClient := client.MustNew(cfg.Value.TokenService, token.NewTokenServiceClient)
 
-	session.RegisterSessionServiceServer(grpcServer, sessionServer)
+	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+		sessionServer := service.NewSessionServiceServer(sessionRepository, userServiceClient, tokenServiceClient)
 
-	if cfg.EnableReflection {
-		reflection.Register(grpcServer)
-	}
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Error serving grpc: %v", err)
-	}
+		session.RegisterSessionServiceServer(srv, sessionServer)
+	})
 }
