@@ -4,6 +4,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
@@ -18,8 +20,11 @@ import (
 )
 
 func main() {
+	configFile := flag.String("config-file", "configs/session.hcl", "Path to the config file")
+	flag.Parse()
+
 	cfg := conf.New[config.Config]()
-	cfg.MustLoadConfigFile("configs/session.hcl")
+	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&data.Session{})

@@ -4,6 +4,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
 	"github.com/kasefuchs/murmora/internal/app/user/config"
 	"github.com/kasefuchs/murmora/internal/app/user/data"
@@ -15,8 +17,11 @@ import (
 )
 
 func main() {
+	configFile := flag.String("config-file", "configs/user.hcl", "Path to the config file")
+	flag.Parse()
+
 	cfg := conf.New[config.Config]()
-	cfg.MustLoadConfigFile("configs/user.hcl")
+	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&data.User{})

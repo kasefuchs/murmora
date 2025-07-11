@@ -4,6 +4,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
@@ -24,8 +26,11 @@ import (
 )
 
 func main() {
+	configFile := flag.String("config-file", "configs/monolith.hcl", "Path to the config file")
+	flag.Parse()
+
 	cfg := conf.New[config.Config]()
-	cfg.MustLoadConfigFile("configs/monolith.hcl")
+	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&userdata.User{}, &tokendata.Token{}, &sessiondata.Session{})
