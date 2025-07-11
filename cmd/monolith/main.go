@@ -10,15 +10,12 @@ import (
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	authenticationservice "github.com/kasefuchs/murmora/internal/app/authentication/service"
-	"github.com/kasefuchs/murmora/internal/app/monolith/config"
-	sessiondata "github.com/kasefuchs/murmora/internal/app/session/data"
-	sessionservice "github.com/kasefuchs/murmora/internal/app/session/service"
-	tokendata "github.com/kasefuchs/murmora/internal/app/token/data"
-	tokenservice "github.com/kasefuchs/murmora/internal/app/token/service"
-	userdata "github.com/kasefuchs/murmora/internal/app/user/data"
-	userservice "github.com/kasefuchs/murmora/internal/app/user/service"
-	conf "github.com/kasefuchs/murmora/internal/pkg/config"
+	authenticationservice "github.com/kasefuchs/murmora/internal/app/authentication"
+	service "github.com/kasefuchs/murmora/internal/app/monolith"
+	sessionservice "github.com/kasefuchs/murmora/internal/app/session"
+	tokenservice "github.com/kasefuchs/murmora/internal/app/token"
+	userservice "github.com/kasefuchs/murmora/internal/app/user"
+	"github.com/kasefuchs/murmora/internal/pkg/config"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"github.com/kasefuchs/murmora/internal/pkg/grpc/client"
 	"github.com/kasefuchs/murmora/internal/pkg/grpc/server"
@@ -29,25 +26,25 @@ func main() {
 	configFile := flag.String("config-file", "configs/monolith.hcl", "Path to the config file")
 	flag.Parse()
 
-	cfg := conf.New[config.Config]()
+	cfg := config.New[service.Config]()
 	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
-	db.MustMigrate(&userdata.User{}, &tokendata.Token{}, &sessiondata.Session{})
+	db.MustMigrate(&userservice.User{}, &tokenservice.Token{}, &sessionservice.Session{})
 
-	userRepository := userdata.NewUserRepository(db)
-	tokenRepository := tokendata.NewTokenRepository(db)
-	sessionRepository := sessiondata.NewSessionRepository(db)
+	userRepository := userservice.NewRepository(db)
+	tokenRepository := tokenservice.NewRepository(db)
+	sessionRepository := sessionservice.NewRepository(db)
 
-	userServiceClient := client.MustNew(&cfg.Value.Client, user.NewUserServiceClient)
-	tokenServiceClient := client.MustNew(&cfg.Value.Client, token.NewTokenServiceClient)
-	sessionServiceClient := client.MustNew(&cfg.Value.Client, session.NewSessionServiceClient)
+	userClient := client.MustNew(&cfg.Value.Client, user.NewUserServiceClient)
+	tokenClient := client.MustNew(&cfg.Value.Client, token.NewTokenServiceClient)
+	sessionClient := client.MustNew(&cfg.Value.Client, session.NewServiceClient)
 
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		userServer := userservice.NewUserServiceServer(userRepository)
-		tokenServer := tokenservice.NewTokenServiceServer(tokenRepository)
-		sessionServer := sessionservice.NewSessionServiceServer(sessionRepository, userServiceClient, tokenServiceClient)
-		authenticationServer := authenticationservice.NewAuthenticationServiceServer(userServiceClient, sessionServiceClient)
+		userServer := userservice.NewServer(userRepository)
+		tokenServer := tokenservice.NewServer(tokenRepository)
+		sessionServer := sessionservice.NewServer(sessionRepository, userClient, tokenClient)
+		authenticationServer := authenticationservice.NewServer(userClient, sessionClient)
 
 		user.RegisterUserServiceServer(srv, userServer)
 		token.RegisterTokenServiceServer(srv, tokenServer)

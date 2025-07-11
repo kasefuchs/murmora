@@ -1,25 +1,30 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package service
+package user
 
 import (
 	"context"
 
 	"github.com/google/uuid"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	"github.com/kasefuchs/murmora/internal/app/user/data"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type UserServiceServer struct {
+type Server struct {
 	user.UnimplementedUserServiceServer
 
-	userRepository *data.UserRepository
+	repository *Repository
 }
 
-func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserDataResponse, error) {
+func NewServer(repository *Repository) *Server {
+	return &Server{
+		repository: repository,
+	}
+}
+
+func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -29,7 +34,7 @@ func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUs
 		return nil, status.Errorf(codes.Internal, "Failed to generate UUID: %v", err)
 	}
 
-	entity, err := s.userRepository.Create(&data.User{
+	entity, err := s.repository.Create(&User{
 		ID:           id,
 		Name:         request.Name,
 		Email:        request.Email,
@@ -47,23 +52,23 @@ func (s *UserServiceServer) CreateUser(_ context.Context, request *user.CreateUs
 	}, nil
 }
 
-func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserDataResponse, error) {
+func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
 	var err error
-	var entity *data.User
+	var entity *User
 
 	switch query := request.GetQuery().(type) {
 	case *user.GetUserRequest_Id:
-		entity, err = s.userRepository.FindByID(query.Id)
+		entity, err = s.repository.FindByID(query.Id)
 
 	case *user.GetUserRequest_Name:
-		entity, err = s.userRepository.FindByName(query.Name)
+		entity, err = s.repository.FindByName(query.Name)
 
 	case *user.GetUserRequest_Email:
-		entity, err = s.userRepository.FindByEmail(query.Email)
+		entity, err = s.repository.FindByEmail(query.Email)
 
 	default:
 		return nil, status.Error(codes.InvalidArgument, "invalid query type")
@@ -83,10 +88,4 @@ func (s *UserServiceServer) GetUser(_ context.Context, request *user.GetUserRequ
 		Email:        entity.Email,
 		PasswordHash: entity.PasswordHash,
 	}, nil
-}
-
-func NewUserServiceServer(userRepository *data.UserRepository) *UserServiceServer {
-	return &UserServiceServer{
-		userRepository: userRepository,
-	}
 }

@@ -1,7 +1,7 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package config
+package session
 
 import (
 	"github.com/kasefuchs/murmora/internal/pkg/database"

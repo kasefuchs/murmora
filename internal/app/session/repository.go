@@ -1,7 +1,7 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package data
+package session
 
 import (
 	"errors"
@@ -10,17 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type SessionRepository struct {
+type Repository struct {
 	database *database.Database
 }
 
-func NewSessionRepository(database *database.Database) *SessionRepository {
-	return &SessionRepository{
+func NewRepository(database *database.Database) *Repository {
+	return &Repository{
 		database: database,
 	}
 }
 
-func (r *SessionRepository) Create(session *Session) (*Session, error) {
+func (r *Repository) Create(session *Session) (*Session, error) {
 	if err := r.database.DB.Create(session).Error; err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (r *SessionRepository) Create(session *Session) (*Session, error) {
 	return session, nil
 }
 
-func (r *SessionRepository) findOneByCondition(conds ...interface{}) (*Session, error) {
+func (r *Repository) findOneByCondition(conds ...interface{}) (*Session, error) {
 	var session Session
 	if err := r.database.DB.First(&session, conds...).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -39,6 +39,6 @@ func (r *SessionRepository) findOneByCondition(conds ...interface{}) (*Session, 
 	return &session, nil
 }
 
-func (r *SessionRepository) FindByID(id string) (*Session, error) {
+func (r *Repository) FindByID(id string) (*Session, error) {
 	return r.findOneByCondition("id = ?", id)
 }

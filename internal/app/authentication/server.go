@@ -1,30 +1,41 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package service
+package authentication
 
 import (
 	"context"
 
 	"github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
-	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
 	"github.com/matthewhartstonge/argon2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type AuthenticationServiceServer struct {
+type Server struct {
 	authentication.UnimplementedAuthenticationServiceServer
 
-	argon                *argon2.Config
-	userServiceClient    user.UserServiceClient
-	tokenServiceClient   token.TokenServiceClient
-	sessionServiceClient session.SessionServiceClient
+	argon         *argon2.Config
+	userClient    user.UserServiceClient
+	sessionClient session.SessionServiceClient
 }
 
-func (s *AuthenticationServiceServer) Register(ctx context.Context, request *authentication.RegisterRequest) (*authentication.TokenResponse, error) {
+func NewServer(
+	userClient user.UserServiceClient,
+	sessionClient session.SessionServiceClient,
+) *Server {
+	argon := argon2.DefaultConfig()
+
+	return &Server{
+		argon:         &argon,
+		userClient:    userClient,
+		sessionClient: sessionClient,
+	}
+}
+
+func (s *Server) Register(ctx context.Context, request *authentication.RegisterRequest) (*authentication.TokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -34,7 +45,7 @@ func (s *AuthenticationServiceServer) Register(ctx context.Context, request *aut
 		return nil, status.Errorf(codes.InvalidArgument, "hash encoding failed: %s", err.Error())
 	}
 
-	userDataResponse, err := s.userServiceClient.CreateUser(ctx, &user.CreateUserRequest{
+	userDataResponse, err := s.userClient.CreateUser(ctx, &user.CreateUserRequest{
 		Name:         request.Name,
 		Email:        request.Email,
 		PasswordHash: string(hashEncoded),
@@ -43,7 +54,7 @@ func (s *AuthenticationServiceServer) Register(ctx context.Context, request *aut
 		return nil, status.Errorf(codes.Internal, "failed to create user: %s", err.Error())
 	}
 
-	createSessionResponse, err := s.sessionServiceClient.CreateSession(ctx, &session.CreateSessionRequest{
+	createSessionResponse, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{
 		UserId: userDataResponse.Id,
 	})
 	if err != nil {
@@ -55,12 +66,12 @@ func (s *AuthenticationServiceServer) Register(ctx context.Context, request *aut
 	}, nil
 }
 
-func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.TokenResponse, error) {
+func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.TokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userDataResponse, err := s.userServiceClient.GetUser(ctx, &user.GetUserRequest{
+	userDataResponse, err := s.userClient.GetUser(ctx, &user.GetUserRequest{
 		Query: &user.GetUserRequest_Email{
 			Email: request.Email,
 		},
@@ -78,7 +89,7 @@ func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authen
 		return nil, status.Errorf(codes.Unauthenticated, "Invalid password")
 	}
 
-	createSessionResponse, err := s.sessionServiceClient.CreateSession(ctx, &session.CreateSessionRequest{
+	createSessionResponse, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{
 		UserId: userDataResponse.Id,
 	})
 	if err != nil {
@@ -88,17 +99,4 @@ func (s *AuthenticationServiceServer) Login(ctx context.Context, request *authen
 	return &authentication.TokenResponse{
 		Token: createSessionResponse.Token,
 	}, nil
-}
-
-func NewAuthenticationServiceServer(
-	userServiceClient user.UserServiceClient,
-	sessionServiceClient session.SessionServiceClient,
-) *AuthenticationServiceServer {
-	argon := argon2.DefaultConfig()
-
-	return &AuthenticationServiceServer{
-		argon:                &argon,
-		userServiceClient:    userServiceClient,
-		sessionServiceClient: sessionServiceClient,
-	}
 }

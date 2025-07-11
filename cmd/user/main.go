@@ -7,10 +7,8 @@ import (
 	"flag"
 
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	"github.com/kasefuchs/murmora/internal/app/user/config"
-	"github.com/kasefuchs/murmora/internal/app/user/data"
-	"github.com/kasefuchs/murmora/internal/app/user/service"
-	conf "github.com/kasefuchs/murmora/internal/pkg/config"
+	service "github.com/kasefuchs/murmora/internal/app/user"
+	"github.com/kasefuchs/murmora/internal/pkg/config"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"github.com/kasefuchs/murmora/internal/pkg/grpc/server"
 	"google.golang.org/grpc"
@@ -20,16 +18,16 @@ func main() {
 	configFile := flag.String("config-file", "configs/user.hcl", "Path to the config file")
 	flag.Parse()
 
-	cfg := conf.New[config.Config]()
+	cfg := config.New[service.Config]()
 	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
-	db.MustMigrate(&data.User{})
+	db.MustMigrate(&service.User{})
 
-	userRepository := data.NewUserRepository(db)
+	userRepository := service.NewRepository(db)
 
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		userServer := service.NewUserServiceServer(userRepository)
+		userServer := service.NewServer(userRepository)
 
 		user.RegisterUserServiceServer(srv, userServer)
 	})

@@ -1,12 +1,11 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package data
+package token
 
 import "github.com/google/uuid"
 
-type Session struct {
+type Token struct {
 	ID      uuid.UUID `gorm:"primaryKey"`
-	UserID  uuid.UUID `gorm:"not null"`
-	TokenID uuid.UUID `gorm:"uniqueIndex"`
+	Payload []byte    `gorm:"not null"`
 }

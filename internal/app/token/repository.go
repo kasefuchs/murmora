@@ -1,7 +1,7 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package data
+package token
 
 import (
 	"errors"
@@ -10,17 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type TokenRepository struct {
+type Repository struct {
 	database *database.Database
 }
 
-func NewTokenRepository(database *database.Database) *TokenRepository {
-	return &TokenRepository{
+func NewRepository(database *database.Database) *Repository {
+	return &Repository{
 		database: database,
 	}
 }
 
-func (r *TokenRepository) Create(user *Token) (*Token, error) {
+func (r *Repository) Create(user *Token) (*Token, error) {
 	if err := r.database.DB.Create(user).Error; err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (r *TokenRepository) Create(user *Token) (*Token, error) {
 	return user, nil
 }
 
-func (r *TokenRepository) findOneByCondition(conds ...interface{}) (*Token, error) {
+func (r *Repository) findOneByCondition(conds ...interface{}) (*Token, error) {
 	var token Token
 	if err := r.database.DB.First(&token, conds...).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -39,6 +39,6 @@ func (r *TokenRepository) findOneByCondition(conds ...interface{}) (*Token, erro
 	return &token, nil
 }
 
-func (r *TokenRepository) FindByID(id string) (*Token, error) {
+func (r *Repository) FindByID(id string) (*Token, error) {
 	return r.findOneByCondition("id = ?", id)
 }

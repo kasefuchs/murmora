@@ -1,7 +1,7 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package service
+package token
 
 import (
 	"context"
@@ -10,20 +10,25 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
-	"github.com/kasefuchs/murmora/internal/app/token/data"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-type TokenServiceServer struct {
+type Server struct {
 	token.UnimplementedTokenServiceServer
 
-	tokenRepository *data.TokenRepository
+	repository *Repository
 }
 
-func (s *TokenServiceServer) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.CreateTokenResponse, error) {
+func NewServer(repository *Repository) *Server {
+	return &Server{
+		repository: repository,
+	}
+}
+
+func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.CreateTokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -45,7 +50,7 @@ func (s *TokenServiceServer) CreateToken(_ context.Context, request *token.Creat
 		return nil, status.Errorf(codes.InvalidArgument, "Failed to marshal payload: %v", err)
 	}
 
-	entity, err := s.tokenRepository.Create(&data.Token{
+	entity, err := s.repository.Create(&Token{
 		ID:      id,
 		Payload: payload,
 	})
@@ -59,7 +64,7 @@ func (s *TokenServiceServer) CreateToken(_ context.Context, request *token.Creat
 	}, nil
 }
 
-func (s *TokenServiceServer) ValidateToken(_ context.Context, request *token.ValidateTokenRequest) (*token.ValidateTokenResponse, error) {
+func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRequest) (*token.ValidateTokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -80,7 +85,7 @@ func (s *TokenServiceServer) ValidateToken(_ context.Context, request *token.Val
 		return nil, status.Errorf(codes.InvalidArgument, "Failed to parse JWT claims: %v", err)
 	}
 
-	entity, err := s.tokenRepository.FindByID(claims.ID)
+	entity, err := s.repository.FindByID(claims.ID)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Failed to find token: %v", err)
 	}
@@ -94,10 +99,4 @@ func (s *TokenServiceServer) ValidateToken(_ context.Context, request *token.Val
 		Id:      entity.ID.String(),
 		Payload: &payload,
 	}, nil
-}
-
-func NewTokenServiceServer(tokenRepository *data.TokenRepository) *TokenServiceServer {
-	return &TokenServiceServer{
-		tokenRepository: tokenRepository,
-	}
 }

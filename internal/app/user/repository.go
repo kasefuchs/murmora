@@ -1,7 +1,7 @@
 // Copyright (c) Kasefuchs
 // SPDX-License-Identifier: MPL-2.0
 
-package data
+package user
 
 import (
 	"errors"
@@ -10,17 +10,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserRepository struct {
+type Repository struct {
 	database *database.Database
 }
 
-func NewUserRepository(database *database.Database) *UserRepository {
-	return &UserRepository{
+func NewRepository(database *database.Database) *Repository {
+	return &Repository{
 		database: database,
 	}
 }
 
-func (r *UserRepository) Create(user *User) (*User, error) {
+func (r *Repository) Create(user *User) (*User, error) {
 	if err := r.database.DB.Create(user).Error; err != nil {
 		return nil, err
 	}
@@ -28,7 +28,7 @@ func (r *UserRepository) Create(user *User) (*User, error) {
 	return user, nil
 }
 
-func (r *UserRepository) findOneByCondition(conds ...interface{}) (*User, error) {
+func (r *Repository) findOneByCondition(conds ...interface{}) (*User, error) {
 	var user User
 	if err := r.database.DB.First(&user, conds...).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -39,14 +39,14 @@ func (r *UserRepository) findOneByCondition(conds ...interface{}) (*User, error)
 	return &user, nil
 }
 
-func (r *UserRepository) FindByID(id string) (*User, error) {
+func (r *Repository) FindByID(id string) (*User, error) {
 	return r.findOneByCondition("id = ?", id)
 }
 
-func (r *UserRepository) FindByName(name string) (*User, error) {
+func (r *Repository) FindByName(name string) (*User, error) {
 	return r.findOneByCondition("name = ?", name)
 }
 
-func (r *UserRepository) FindByEmail(email string) (*User, error) {
+func (r *Repository) FindByEmail(email string) (*User, error) {
 	return r.findOneByCondition("email = ?", email)
 }
