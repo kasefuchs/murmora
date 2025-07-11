@@ -18,8 +18,8 @@ const delim = "."
 
 type Config[T any] struct {
 	Value       *T
-	globalKoanf *koanf.Koanf
 	configPath  string
+	globalKoanf *koanf.Koanf
 }
 
 func New[T any]() *Config[T] {
@@ -35,7 +35,7 @@ func (c *Config[T]) mustUnmarshal() {
 	}
 }
 
-func (c *Config[T]) MustLoadDefaults(defaults map[string]interface{}) {
+func (c *Config[T]) MustLoadDefaults(defaults map[string]any) {
 	if err := c.globalKoanf.Load(confmap.Provider(defaults, delim), nil); err != nil {
 		log.Fatal().Err(err).Msg("Failed to load default config values")
 	}
@@ -44,18 +44,17 @@ func (c *Config[T]) MustLoadDefaults(defaults map[string]interface{}) {
 }
 
 func (c *Config[T]) MustLoadConfigFile(path string) {
-	abs, err := filepath.Abs(path)
-	if err != nil {
+	var err error
+	if c.configPath, err = filepath.Abs(path); err != nil {
 		log.Fatal().Err(err).Str("path", path).Msg("Invalid config path")
 	}
-	c.configPath = abs
 
-	if _, err := os.Stat(abs); err != nil {
-		log.Fatal().Err(err).Str("path", abs).Msg("Config file not found")
+	if _, err := os.Stat(c.configPath); err != nil {
+		log.Fatal().Err(err).Str("path", c.configPath).Msg("Config file not found")
 	}
 
-	if err := c.globalKoanf.Load(file.Provider(abs), hcl.Parser(true)); err != nil {
-		log.Fatal().Err(err).Str("path", abs).Msg("Failed to load config file")
+	if err := c.globalKoanf.Load(file.Provider(c.configPath), hcl.Parser(true)); err != nil {
+		log.Fatal().Err(err).Str("path", c.configPath).Msg("Failed to load config file")
 	}
 
 	c.mustUnmarshal()

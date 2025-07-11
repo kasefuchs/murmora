@@ -10,7 +10,7 @@ import (
 )
 
 type Config struct {
-	Server   *server.Config   `koanf:"server"`
-	Client   *client.Config   `koanf:"client"`
-	Database *database.Config `koanf:"database"`
+	Server   server.Config   `koanf:"server"`
+	Client   client.Config   `koanf:"client"`
+	Database database.Config `koanf:"database"`
 }

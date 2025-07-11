@@ -19,10 +19,10 @@ func main() {
 	cfg := conf.New[config.Config]()
 	cfg.MustLoadConfigFile("configs/authentication.hcl")
 
-	userServiceClient := client.MustNew(cfg.Value.UserService, user.NewUserServiceClient)
-	sessionServiceClient := client.MustNew(cfg.Value.SessionService, session.NewSessionServiceClient)
+	userServiceClient := client.MustNew(&cfg.Value.UserService, user.NewUserServiceClient)
+	sessionServiceClient := client.MustNew(&cfg.Value.SessionService, session.NewSessionServiceClient)
 
-	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		authenticationServer := service.NewAuthenticationServiceServer(userServiceClient, sessionServiceClient)
 
 		authentication.RegisterAuthenticationServiceServer(srv, authenticationServer)

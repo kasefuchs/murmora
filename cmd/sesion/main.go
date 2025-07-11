@@ -21,15 +21,15 @@ func main() {
 	cfg := conf.New[config.Config]()
 	cfg.MustLoadConfigFile("configs/session.hcl")
 
-	db := database.MustNew(cfg.Value.Database)
+	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&data.Session{})
 
 	sessionRepository := data.NewSessionRepository(db)
 
-	userServiceClient := client.MustNew(cfg.Value.UserService, user.NewUserServiceClient)
-	tokenServiceClient := client.MustNew(cfg.Value.TokenService, token.NewTokenServiceClient)
+	userServiceClient := client.MustNew(&cfg.Value.UserService, user.NewUserServiceClient)
+	tokenServiceClient := client.MustNew(&cfg.Value.TokenService, token.NewTokenServiceClient)
 
-	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		sessionServer := service.NewSessionServiceServer(sessionRepository, userServiceClient, tokenServiceClient)
 
 		session.RegisterSessionServiceServer(srv, sessionServer)

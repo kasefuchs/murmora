@@ -4,6 +4,7 @@
 package server
 
 type Config struct {
-	Address    string `koanf:"address"`
-	Reflection bool   `koanf:"reflection"`
+	Address            string `koanf:"address"`
+	Reflection         bool   `koanf:"reflection"`
+	DisableHealthCheck bool   `koanf:"disable_health_check"`
 }

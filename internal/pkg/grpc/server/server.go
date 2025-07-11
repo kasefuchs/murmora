@@ -8,6 +8,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -20,8 +22,13 @@ func MustServe(cfg *Config, register func(*grpc.Server)) {
 	srv := grpc.NewServer()
 
 	register(srv)
+
 	if cfg.Reflection {
 		reflection.Register(srv)
+	}
+
+	if !cfg.DisableHealthCheck {
+		grpc_health_v1.RegisterHealthServer(srv, health.NewServer())
 	}
 
 	log.Info().Str("address", cfg.Address).Msg("Server started")

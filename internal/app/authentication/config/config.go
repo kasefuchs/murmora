@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Server         *server.Config `koanf:"server"`
-	UserService    *client.Config `koanf:"user_service"`
-	SessionService *client.Config `koanf:"session_service"`
+	Server         server.Config `koanf:"server"`
+	UserService    client.Config `koanf:"user_service"`
+	SessionService client.Config `koanf:"session_service"`
 }

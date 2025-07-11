@@ -27,18 +27,18 @@ func main() {
 	cfg := conf.New[config.Config]()
 	cfg.MustLoadConfigFile("configs/monolith.hcl")
 
-	db := database.MustNew(cfg.Value.Database)
+	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&userdata.User{}, &tokendata.Token{}, &sessiondata.Session{})
 
 	userRepository := userdata.NewUserRepository(db)
 	tokenRepository := tokendata.NewTokenRepository(db)
 	sessionRepository := sessiondata.NewSessionRepository(db)
 
-	userServiceClient := client.MustNew(cfg.Value.Client, user.NewUserServiceClient)
-	tokenServiceClient := client.MustNew(cfg.Value.Client, token.NewTokenServiceClient)
-	sessionServiceClient := client.MustNew(cfg.Value.Client, session.NewSessionServiceClient)
+	userServiceClient := client.MustNew(&cfg.Value.Client, user.NewUserServiceClient)
+	tokenServiceClient := client.MustNew(&cfg.Value.Client, token.NewTokenServiceClient)
+	sessionServiceClient := client.MustNew(&cfg.Value.Client, session.NewSessionServiceClient)
 
-	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		userServer := userservice.NewUserServiceServer(userRepository)
 		tokenServer := tokenservice.NewTokenServiceServer(tokenRepository)
 		sessionServer := sessionservice.NewSessionServiceServer(sessionRepository, userServiceClient, tokenServiceClient)

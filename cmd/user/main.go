@@ -18,12 +18,12 @@ func main() {
 	cfg := conf.New[config.Config]()
 	cfg.MustLoadConfigFile("configs/user.hcl")
 
-	db := database.MustNew(cfg.Value.Database)
+	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&data.User{})
 
 	userRepository := data.NewUserRepository(db)
 
-	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		userServer := service.NewUserServiceServer(userRepository)
 
 		user.RegisterUserServiceServer(srv, userServer)

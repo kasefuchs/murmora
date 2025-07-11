@@ -18,12 +18,12 @@ func main() {
 	cfg := conf.New[config.Config]()
 	cfg.MustLoadConfigFile("configs/token.hcl")
 
-	db := database.MustNew(cfg.Value.Database)
+	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&data.Token{})
 
 	tokenRepository := data.NewTokenRepository(db)
 
-	server.MustServe(cfg.Value.Server, func(srv *grpc.Server) {
+	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		tokenServer := service.NewTokenServiceServer(tokenRepository)
 
 		token.RegisterTokenServiceServer(srv, tokenServer)
