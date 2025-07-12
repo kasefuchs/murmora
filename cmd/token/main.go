@@ -24,10 +24,8 @@ func main() {
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&service.Token{})
 
-	tokenRepository := service.NewRepository(db)
-
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		tokenServer := service.NewServer(tokenRepository)
+		tokenServer := service.NewServer(db)
 
 		token.RegisterTokenServiceServer(srv, tokenServer)
 	})

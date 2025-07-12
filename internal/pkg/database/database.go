@@ -25,7 +25,7 @@ func MustNew(config *Config) *Database {
 
 	db, err := gorm.Open(dial)
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to connect to database")
+		log.Fatal().Err(err).Msg("Failed to connect to Database")
 	}
 
 	return &Database{DB: db}
@@ -34,7 +34,7 @@ func MustNew(config *Config) *Database {
 // MustMigrate runs auto migration.
 func (d *Database) MustMigrate(models ...interface{}) {
 	if err := d.DB.AutoMigrate(models...); err != nil {
-		log.Fatal().Err(err).Msg("Failed to migrate database")
+		log.Fatal().Err(err).Msg("Failed to migrate Database")
 	}
 }
 

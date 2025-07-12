@@ -5,6 +5,7 @@ syntax = "proto3";
 
 package murmora.user.v1;
 
+import "murmora/common/v1/uuid.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/user/v1;user";
@@ -16,14 +17,14 @@ message CreateUserRequest {
     pattern: "^[a-z0-9._]+$"
   }];
   string email = 2 [(validate.rules).string.email = true];
-  string password_hash = 3 [(validate.rules).string.min_len = 1];
+  bytes password_hash = 3 [(validate.rules).bytes.min_len = 1];
 }
 
 message GetUserRequest {
   oneof query {
     option (validate.required) = true;
 
-    string id = 1 [(validate.rules).string.uuid = true];
+    murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
     string name = 2 [(validate.rules).string = {
       min_len: 2
       max_len: 32
@@ -34,8 +35,8 @@ message GetUserRequest {
 }
 
 message UserDataResponse {
-  string id = 1;
+  murmora.common.v1.UUID id = 1;
   string name = 2;
   string email = 3;
-  string password_hash = 4;
+  bytes password_hash = 4;
 }

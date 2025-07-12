@@ -22,10 +22,7 @@ type Server struct {
 	sessionClient session.SessionServiceClient
 }
 
-func NewServer(
-	userClient user.UserServiceClient,
-	sessionClient session.SessionServiceClient,
-) *Server {
+func NewServer(userClient user.UserServiceClient, sessionClient session.SessionServiceClient) *Server {
 	argon := argon2.DefaultConfig()
 
 	return &Server{
@@ -40,30 +37,26 @@ func (s *Server) Register(ctx context.Context, request *authentication.RegisterR
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	hashEncoded, err := s.argon.HashEncoded([]byte(request.Password))
+	passwordHash, err := s.argon.HashEncoded([]byte(request.Password))
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "hash encoding failed: %s", err.Error())
+		return nil, status.Errorf(codes.InvalidArgument, "password hash encoding failed: %s", err.Error())
 	}
 
-	userDataResponse, err := s.userClient.CreateUser(ctx, &user.CreateUserRequest{
+	userData, err := s.userClient.CreateUser(ctx, &user.CreateUserRequest{
 		Name:         request.Name,
 		Email:        request.Email,
-		PasswordHash: string(hashEncoded),
+		PasswordHash: passwordHash,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create user: %s", err.Error())
+		return nil, status.Errorf(codes.Unavailable, "failed to create user: %s", err.Error())
 	}
 
-	createSessionResponse, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{
-		UserId: userDataResponse.Id,
-	})
+	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.Id})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create session: %s", err.Error())
+		return nil, status.Errorf(codes.Unavailable, "failed to create session: %s", err.Error())
 	}
 
-	return &authentication.TokenResponse{
-		Token: createSessionResponse.Token,
-	}, nil
+	return &authentication.TokenResponse{Token: sessionData.Token}, nil
 }
 
 func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.TokenResponse, error) {
@@ -71,32 +64,25 @@ func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userDataResponse, err := s.userClient.GetUser(ctx, &user.GetUserRequest{
-		Query: &user.GetUserRequest_Email{
-			Email: request.Email,
-		},
+	userData, err := s.userClient.GetUser(ctx, &user.GetUserRequest{
+		Query: &user.GetUserRequest_Email{Email: request.Email},
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to get user: %v", err)
+		return nil, status.Errorf(codes.NotFound, "failed to get user: %v", err)
 	}
 
-	ok, err := argon2.VerifyEncoded([]byte(request.Password), []byte(userDataResponse.PasswordHash))
+	ok, err := argon2.VerifyEncoded([]byte(request.Password), userData.PasswordHash)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to verify password: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to verify password: %v", err)
 	}
-
 	if !ok {
-		return nil, status.Errorf(codes.Unauthenticated, "Invalid password")
+		return nil, status.Errorf(codes.Unauthenticated, "invalid password")
 	}
 
-	createSessionResponse, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{
-		UserId: userDataResponse.Id,
-	})
+	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.Id})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to create session: %s", err.Error())
+		return nil, status.Errorf(codes.Unavailable, "failed to create session: %s", err.Error())
 	}
 
-	return &authentication.TokenResponse{
-		Token: createSessionResponse.Token,
-	}, nil
+	return &authentication.TokenResponse{Token: sessionData.Token}, nil
 }

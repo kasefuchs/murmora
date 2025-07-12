@@ -7,9 +7,11 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/kasefuchs/murmora/api/proto/murmora/common/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
+	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -24,10 +26,12 @@ type Server struct {
 }
 
 func NewServer(
-	repository *Repository,
+	db *database.Database,
 	userClient user.UserServiceClient,
 	tokenClient token.TokenServiceClient,
 ) *Server {
+	repository := NewRepository(db)
+
 	return &Server{
 		repository:  repository,
 		userClient:  userClient,
@@ -40,43 +44,39 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	userId, err := uuid.Parse(request.UserId)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to parse userClient id: %v", err)
-	}
-
-	userDataResponse, err := s.userClient.GetUser(ctx, &user.GetUserRequest{
-		Query: &user.GetUserRequest_Id{
-			Id: userId.String(),
-		},
+	userData, err := s.userClient.GetUser(ctx, &user.GetUserRequest{
+		Query: &user.GetUserRequest_Id{Id: request.UserId},
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to get userClient: %v", err)
+		return nil, status.Errorf(codes.NotFound, "failed to get user: %v", err)
+	}
+
+	userId, err := userData.Id.ToUUID()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to parse user id: %v", err)
 	}
 
 	id, err := uuid.NewV7()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to generate session ID: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate session ID: %v", err)
 	}
 
-	tokenPayload, err := anypb.New(&session.TokenPayload{
-		SessionId: id.String(),
+	payload, err := anypb.New(&session.TokenPayload{Id: common.NewUUID(id)})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create payload: %v", err)
+	}
+
+	tokenData, err := s.tokenClient.CreateToken(ctx, &token.CreateTokenRequest{
+		Secret:  userData.PasswordHash,
+		Payload: payload,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to create session payload: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to create token: %v", err)
 	}
 
-	tokenResponse, err := s.tokenClient.CreateToken(ctx, &token.CreateTokenRequest{
-		Secret:  []byte(userDataResponse.PasswordHash),
-		Payload: tokenPayload,
-	})
+	tokenId, err := tokenData.Id.ToUUID()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to create tokenClient: %v", err)
-	}
-
-	tokenId, err := uuid.Parse(tokenResponse.Id)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to parse tokenClient id: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse token id: %v", err)
 	}
 
 	entity, err := s.repository.Create(&Session{
@@ -85,11 +85,11 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 		TokenID: tokenId,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to create session: %v", err)
+		return nil, status.Errorf(codes.Unavailable, "failed to create session: %v", err)
 	}
 
 	return &session.CreateSessionResponse{
-		Id:    entity.ID.String(),
-		Token: tokenResponse.Token,
+		Id:    common.NewUUID(entity.ID),
+		Token: tokenData.Token,
 	}, nil
 }

@@ -27,12 +27,11 @@ func main() {
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&service.Session{})
 
-	repository := service.NewRepository(db)
 	userClient := client.MustNew(&cfg.Value.UserService, user.NewUserServiceClient)
 	tokenClient := client.MustNew(&cfg.Value.TokenService, token.NewTokenServiceClient)
 
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		sessionServer := service.NewServer(repository, userClient, tokenClient)
+		sessionServer := service.NewServer(db, userClient, tokenClient)
 
 		session.RegisterSessionServiceServer(srv, sessionServer)
 	})

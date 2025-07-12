@@ -3,50 +3,24 @@
 
 package user
 
-import (
-	"errors"
-
-	"github.com/kasefuchs/murmora/internal/pkg/database"
-	"gorm.io/gorm"
-)
+import "github.com/kasefuchs/murmora/internal/pkg/database"
 
 type Repository struct {
-	database *database.Database
+	*database.Repository[User]
 }
 
-func NewRepository(database *database.Database) *Repository {
+func NewRepository(db *database.Database) *Repository {
 	return &Repository{
-		database: database,
+		Repository: &database.Repository[User]{
+			Database: db,
+		},
 	}
-}
-
-func (r *Repository) Create(user *User) (*User, error) {
-	if err := r.database.DB.Create(user).Error; err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (r *Repository) findOneByCondition(conds ...interface{}) (*User, error) {
-	var user User
-	if err := r.database.DB.First(&user, conds...).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return &user, nil
-}
-
-func (r *Repository) FindByID(id string) (*User, error) {
-	return r.findOneByCondition("id = ?", id)
 }
 
 func (r *Repository) FindByName(name string) (*User, error) {
-	return r.findOneByCondition("name = ?", name)
+	return r.FindOneByCondition("name = ?", name)
 }
 
 func (r *Repository) FindByEmail(email string) (*User, error) {
-	return r.findOneByCondition("email = ?", email)
+	return r.FindOneByCondition("email = ?", email)
 }

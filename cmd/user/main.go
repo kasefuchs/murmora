@@ -24,10 +24,8 @@ func main() {
 	db := database.MustNew(&cfg.Value.Database)
 	db.MustMigrate(&service.User{})
 
-	userRepository := service.NewRepository(db)
-
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		userServer := service.NewServer(userRepository)
+		userServer := service.NewServer(db)
 
 		user.RegisterUserServiceServer(srv, userServer)
 	})

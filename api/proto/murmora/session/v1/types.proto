@@ -5,19 +5,21 @@ syntax = "proto3";
 
 package murmora.session.v1;
 
+import "murmora/common/v1/jwt.proto";
+import "murmora/common/v1/uuid.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/session/v1;session";
 
 message TokenPayload {
-  string session_id = 1;
+  murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
 }
 
 message CreateSessionRequest {
-  string user_id = 1 [(validate.rules).string.uuid = true];
+  murmora.common.v1.UUID user_id = 1 [(validate.rules).message.required = true];
 }
 
 message CreateSessionResponse {
-  string id = 1;
-  string token = 2;
+  murmora.common.v1.UUID id = 1;
+  murmora.common.v1.JWT token = 2;
 }

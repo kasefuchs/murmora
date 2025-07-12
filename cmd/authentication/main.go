@@ -24,7 +24,7 @@ func main() {
 	cfg.MustLoadConfigFile(*configFile)
 
 	userClient := client.MustNew(&cfg.Value.UserService, user.NewUserServiceClient)
-	sessionClient := client.MustNew(&cfg.Value.SessionService, session.NewServiceClient)
+	sessionClient := client.MustNew(&cfg.Value.SessionService, session.NewSessionServiceClient)
 
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		authenticationServer := service.NewServer(userClient, sessionClient)

@@ -5,6 +5,7 @@ syntax = "proto3";
 
 package murmora.authentication.v1;
 
+import "murmora/common/v1/jwt.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1;authentication";
@@ -13,7 +14,7 @@ message RegisterRequest {
   string name = 1 [(validate.rules).string = {
     min_len: 2
     max_len: 32
-    pattern: "^[a-z0-9._]+$"
+    pattern: "^[a-zA-Z0-9]+$"
   }];
   string email = 2 [(validate.rules).string.email = true];
   string password = 3 [(validate.rules).string = {
@@ -31,5 +32,5 @@ message LoginRequest {
 }
 
 message TokenResponse {
-  string token = 1;
+  murmora.common.v1.JWT token = 1;
 }

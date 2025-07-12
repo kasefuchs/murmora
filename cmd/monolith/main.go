@@ -10,11 +10,11 @@ import (
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	authenticationservice "github.com/kasefuchs/murmora/internal/app/authentication"
+	authenticationService "github.com/kasefuchs/murmora/internal/app/authentication"
 	service "github.com/kasefuchs/murmora/internal/app/monolith"
-	sessionservice "github.com/kasefuchs/murmora/internal/app/session"
-	tokenservice "github.com/kasefuchs/murmora/internal/app/token"
-	userservice "github.com/kasefuchs/murmora/internal/app/user"
+	sessionService "github.com/kasefuchs/murmora/internal/app/session"
+	tokenService "github.com/kasefuchs/murmora/internal/app/token"
+	userService "github.com/kasefuchs/murmora/internal/app/user"
 	"github.com/kasefuchs/murmora/internal/pkg/config"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"github.com/kasefuchs/murmora/internal/pkg/grpc/client"
@@ -30,21 +30,17 @@ func main() {
 	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
-	db.MustMigrate(&userservice.User{}, &tokenservice.Token{}, &sessionservice.Session{})
-
-	userRepository := userservice.NewRepository(db)
-	tokenRepository := tokenservice.NewRepository(db)
-	sessionRepository := sessionservice.NewRepository(db)
+	db.MustMigrate(&userService.User{}, &tokenService.Token{}, &sessionService.Session{})
 
 	userClient := client.MustNew(&cfg.Value.Client, user.NewUserServiceClient)
 	tokenClient := client.MustNew(&cfg.Value.Client, token.NewTokenServiceClient)
-	sessionClient := client.MustNew(&cfg.Value.Client, session.NewServiceClient)
+	sessionClient := client.MustNew(&cfg.Value.Client, session.NewSessionServiceClient)
 
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
-		userServer := userservice.NewServer(userRepository)
-		tokenServer := tokenservice.NewServer(tokenRepository)
-		sessionServer := sessionservice.NewServer(sessionRepository, userClient, tokenClient)
-		authenticationServer := authenticationservice.NewServer(userClient, sessionClient)
+		userServer := userService.NewServer(db)
+		tokenServer := tokenService.NewServer(db)
+		sessionServer := sessionService.NewServer(db, userClient, tokenClient)
+		authenticationServer := authenticationService.NewServer(userClient, sessionClient)
 
 		user.RegisterUserServiceServer(srv, userServer)
 		token.RegisterTokenServiceServer(srv, tokenServer)

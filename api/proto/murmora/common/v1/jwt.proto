@@ -1,0 +1,14 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.common.v1;
+
+import "validate/validate.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/common/v1;common";
+
+message JWT {
+  string value = 1 [(validate.rules).string.pattern = "^[A-Za-z0-9-_]*\\.[A-Za-z0-9-_]*\\.[A-Za-z0-9-_]*$"];
+}
