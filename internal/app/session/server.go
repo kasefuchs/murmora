@@ -93,3 +93,34 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 		Token: tokenData.Token,
 	}, nil
 }
+
+func (s *Server) GetSession(_ context.Context, request *session.GetSessionRequest) (*session.GetSessionResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	var err error
+	var entity *Session
+
+	switch query := request.GetQuery().(type) {
+	case *session.GetSessionRequest_Id:
+		entity, err = s.repository.FindByID(query.Id.Value)
+	case *session.GetSessionRequest_TokenId:
+		entity, err = s.repository.FindByTokenId(query.TokenId.Value)
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid query type")
+	}
+
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "error querying session: %v", err)
+	}
+	if entity == nil {
+		return nil, status.Error(codes.NotFound, "session not found")
+	}
+
+	return &session.GetSessionResponse{
+		Id:      common.NewUUID(entity.ID),
+		UserId:  common.NewUUID(entity.UserID),
+		TokenId: common.NewUUID(entity.TokenID),
+	}, nil
+}

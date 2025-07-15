@@ -41,7 +41,7 @@ func (h *authenticationHandler) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	tokenResponse, err := h.authenticationClient.Login(ctx.Context(), &authentication.LoginRequest{
+	tokenData, err := h.authenticationClient.Login(ctx.Context(), &authentication.LoginRequest{
 		Email:    request.Email,
 		Password: request.Password,
 	})
@@ -49,7 +49,7 @@ func (h *authenticationHandler) Login(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(&model.AuthenticationTokenResponse{Token: tokenResponse.Token.Value})
+	return ctx.JSON(&model.AuthenticationTokenResponse{Token: tokenData.Token.Value})
 }
 
 func (h *authenticationHandler) Register(ctx *fiber.Ctx) error {
@@ -61,7 +61,7 @@ func (h *authenticationHandler) Register(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	tokenResponse, err := h.authenticationClient.Register(ctx.Context(), &authentication.RegisterRequest{
+	tokenData, err := h.authenticationClient.Register(ctx.Context(), &authentication.RegisterRequest{
 		Name:     request.Name,
 		Email:    request.Email,
 		Password: request.Password,
@@ -70,5 +70,5 @@ func (h *authenticationHandler) Register(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return ctx.JSON(&model.AuthenticationTokenResponse{Token: tokenResponse.Token.Value})
+	return ctx.JSON(&model.AuthenticationTokenResponse{Token: tokenData.Token.Value})
 }

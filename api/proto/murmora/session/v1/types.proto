@@ -23,3 +23,18 @@ message CreateSessionResponse {
   murmora.common.v1.UUID id = 1;
   murmora.common.v1.JWT token = 2;
 }
+
+message GetSessionRequest {
+  oneof query {
+    option (validate.required) = true;
+
+    murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
+    murmora.common.v1.UUID token_id = 2 [(validate.rules).message.required = true];
+  }
+}
+
+message GetSessionResponse {
+  murmora.common.v1.UUID id = 1;
+  murmora.common.v1.UUID user_id = 2;
+  murmora.common.v1.UUID token_id = 3;
+}

@@ -11,4 +11,5 @@ option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/session/v1;s
 
 service SessionService {
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse);
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse);
 }

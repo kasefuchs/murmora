@@ -11,5 +11,6 @@ option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;tok
 
 service TokenService {
   rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
-  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc GetTokenData(GetTokenDataRequest) returns (TokenDataResponse);
+  rpc GetValidatedTokenData(GetValidatedTokenDataRequest) returns (TokenDataResponse);
 }

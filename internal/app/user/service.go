@@ -28,7 +28,7 @@ func NewServer(db *database.Database) *Server {
 	}
 }
 
-func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserDataResponse, error) {
+func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -48,7 +48,7 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 		return nil, status.Errorf(codes.AlreadyExists, "user already exists: %v", err)
 	}
 
-	return &user.UserDataResponse{
+	return &user.UserResponse{
 		Id:           common.NewUUID(entity.ID),
 		Name:         entity.Name,
 		Email:        entity.Email,
@@ -56,7 +56,7 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 	}, nil
 }
 
-func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserDataResponse, error) {
+func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -82,7 +82,7 @@ func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &user.UserDataResponse{
+	return &user.UserResponse{
 		Id:           common.NewUUID(entity.ID),
 		Name:         entity.Name,
 		Email:        entity.Email,

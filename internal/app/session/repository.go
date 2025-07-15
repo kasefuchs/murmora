@@ -16,3 +16,7 @@ func NewRepository(db *database.Database) *Repository {
 		},
 	}
 }
+
+func (r *Repository) FindByTokenId(tokenId string) (*Session, error) {
+	return r.FindOneByCondition("token_id = ?", tokenId)
+}

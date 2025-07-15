@@ -21,13 +21,16 @@ import (
 type Server struct {
 	token.UnimplementedTokenServiceServer
 
+	jwtParser  *jwt.Parser
 	repository *Repository
 }
 
 func NewServer(db *database.Database) *Server {
+	jwtParser := jwt.NewParser()
 	repository := NewRepository(db)
 
 	return &Server{
+		jwtParser:  jwtParser,
 		repository: repository,
 	}
 }
@@ -39,24 +42,24 @@ func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenReques
 
 	id, err := uuid.NewV7()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to generate UUID: %v", err)
+		return nil, status.Errorf(codes.Internal, "failed to generate UUID: %v", err)
 	}
 
 	jwtToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{ID: id.String()}).SignedString(request.Secret)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to sign JWT: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to sign JWT: %v", err)
 	}
 
 	payload, err := proto.Marshal(request.Payload)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Failed to marshal payload: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "failed to marshal payload: %v", err)
 	}
 
 	if _, err := s.repository.Create(&Token{
 		ID:      id,
 		Payload: payload,
 	}); err != nil {
-		return nil, status.Errorf(codes.Unavailable, "Failed to create token: %v", err)
+		return nil, status.Errorf(codes.Unavailable, "failed to create token: %v", err)
 	}
 
 	return &token.CreateTokenResponse{
@@ -65,12 +68,50 @@ func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenReques
 	}, nil
 }
 
-func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRequest) (*token.ValidateTokenResponse, error) {
+func (s *Server) resolveTokenData(id string) (*token.TokenDataResponse, error) {
+	entity, err := s.repository.FindByID(id)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to find token: %v", err)
+	}
+	if entity == nil {
+		return nil, status.Errorf(codes.NotFound, "token not found")
+	}
+
+	var payload anypb.Any
+	if err := proto.Unmarshal(entity.Payload, &payload); err != nil {
+		return nil, status.Errorf(codes.Aborted, "failed to unmarshal payload: %v", err)
+	}
+
+	return &token.TokenDataResponse{
+		Id:      common.NewUUID(entity.ID),
+		Payload: &payload,
+	}, nil
+}
+
+func (s *Server) GetTokenData(_ context.Context, request *token.GetTokenDataRequest) (*token.TokenDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	jwtToken, err := jwt.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	jwtToken, _, err := s.jwtParser.ParseUnverified(request.Token.Value, &jwt.RegisteredClaims{})
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT: %v", err)
+	}
+
+	claims, ok := jwtToken.Claims.(*jwt.RegisteredClaims)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT claims: %v", err)
+	}
+
+	return s.resolveTokenData(claims.ID)
+}
+
+func (s *Server) GetValidatedTokenData(_ context.Context, request *token.GetValidatedTokenDataRequest) (*token.TokenDataResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	jwtToken, err := s.jwtParser.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -86,21 +127,5 @@ func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRe
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT claims: %v", err)
 	}
 
-	entity, err := s.repository.FindByID(claims.ID)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to find token: %v", err)
-	}
-	if entity == nil {
-		return nil, status.Errorf(codes.NotFound, "token not found")
-	}
-
-	var payload anypb.Any
-	if err := proto.Unmarshal(entity.Payload, &payload); err != nil {
-		return nil, status.Errorf(codes.Aborted, "failed to unmarshal payload: %v", err)
-	}
-
-	return &token.ValidateTokenResponse{
-		Id:      common.NewUUID(entity.ID),
-		Payload: &payload,
-	}, nil
+	return s.resolveTokenData(claims.ID)
 }

@@ -73,6 +73,8 @@ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6r
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bmatcuk/doublestar/v4 v4.8.1 h1:54Bopc5c2cAvhLRAzqOGCYHYyhcDHsFF4wWIR5wKP38=
 github.com/bmatcuk/doublestar/v4 v4.8.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
+github.com/bmatcuk/doublestar/v4 v4.9.0 h1:DBvuZxjdKkRP/dr4GVV4w2fnmrk5Hxc90T51LZjv0JA=
+github.com/bmatcuk/doublestar/v4 v4.9.0/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/bradleyfalzon/ghinstallation/v2 v2.16.0 h1:B91r9bHtXp/+XRgS5aZm6ZzTdz3ahgJYmkt4xZkgDz8=
 github.com/bradleyfalzon/ghinstallation/v2 v2.16.0/go.mod h1:OeVe5ggFzoBnmgitZe/A+BqGOnv1DvU/0uiLQi1wutM=
 github.com/bufbuild/buf v1.55.1 h1:yaRXO9YmtgyEhiqT/gwuJWhHN9xBBbqlQvXVnPauvCk=

@@ -20,7 +20,7 @@ func (r *Repository[T]) Create(entity *T) (*T, error) {
 	return entity, nil
 }
 
-func (r *Repository[T]) FindByID(id any) (*T, error) {
+func (r *Repository[T]) FindByID(id string) (*T, error) {
 	var entity T
 	if err := r.Database.DB.First(&entity, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

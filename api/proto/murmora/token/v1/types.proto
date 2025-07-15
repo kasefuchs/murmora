@@ -22,12 +22,16 @@ message CreateTokenResponse {
   murmora.common.v1.JWT token = 2;
 }
 
-message ValidateTokenRequest {
+message GetTokenDataRequest {
+  murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
+}
+
+message GetValidatedTokenDataRequest {
   murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
   bytes secret = 2 [(validate.rules).bytes.min_len = 32];
 }
 
-message ValidateTokenResponse {
+message TokenDataResponse {
   murmora.common.v1.UUID id = 1;
   google.protobuf.Any payload = 2;
 }
