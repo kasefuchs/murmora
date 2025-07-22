@@ -6,6 +6,18 @@ server {
   prefix  = "/gateway/v1"
 }
 
+user_service {
+  address = "127.0.0.1:8081"
+}
+
+token_service {
+  address = "127.0.0.1:8082"
+}
+
+session_service {
+  address = "127.0.0.1:8083"
+}
+
 authentication_service {
   address = "127.0.0.1:8084"
 }

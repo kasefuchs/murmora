@@ -35,37 +35,16 @@ func NewServer(db *database.Database) *Server {
 	}
 }
 
-func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.CreateTokenResponse, error) {
-	if err := request.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+func createSignedToken(id string, secret []byte) (string, error) {
+	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{ID: id}).SignedString(secret)
+}
+
+func validateHMACMethod(token *jwt.Token) error {
+	if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		return fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 	}
 
-	id, err := uuid.NewV7()
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to generate UUID: %v", err)
-	}
-
-	jwtToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{ID: id.String()}).SignedString(request.Secret)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to sign JWT: %v", err)
-	}
-
-	payload, err := proto.Marshal(request.Payload)
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "failed to marshal payload: %v", err)
-	}
-
-	if _, err := s.repository.Create(&Token{
-		ID:      id,
-		Payload: payload,
-	}); err != nil {
-		return nil, status.Errorf(codes.Unavailable, "failed to create token: %v", err)
-	}
-
-	return &token.CreateTokenResponse{
-		Id:    common.NewUUID(id),
-		Token: &common.JWT{Value: jwtToken},
-	}, nil
+	return nil
 }
 
 func (s *Server) resolveTokenData(id string) (*token.TokenDataResponse, error) {
@@ -85,6 +64,78 @@ func (s *Server) resolveTokenData(id string) (*token.TokenDataResponse, error) {
 	return &token.TokenDataResponse{
 		Id:      common.NewUUID(entity.ID),
 		Payload: &payload,
+	}, nil
+}
+
+func (s *Server) SignToken(_ context.Context, request *token.SignTokenRequest) (*token.TokenResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	jwtToken, err := createSignedToken(request.Id.Value, request.Secret)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to sign JWT: %v", err)
+	}
+
+	return &token.TokenResponse{
+		Id:    request.Id,
+		Token: &common.JWT{Value: jwtToken},
+	}, nil
+}
+
+func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.TokenResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	id, err := uuid.NewV7()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to generate UUID: %v", err)
+	}
+
+	jwtToken, err := createSignedToken(id.String(), request.Secret)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to sign JWT: %v", err)
+	}
+
+	payload, err := proto.Marshal(request.Payload)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to marshal payload: %v", err)
+	}
+
+	if _, err := s.repository.Create(&Token{ID: id, Payload: payload}); err != nil {
+		return nil, status.Errorf(codes.Unavailable, "failed to create token: %v", err)
+	}
+
+	return &token.TokenResponse{
+		Id:    common.NewUUID(id),
+		Token: &common.JWT{Value: jwtToken},
+	}, nil
+}
+
+func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRequest) (*token.ValidateTokenResponse, error) {
+	if err := request.Validate(); err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	jwtToken, err := s.jwtParser.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if err := validateHMACMethod(token); err != nil {
+			return nil, err
+		}
+
+		return request.Secret, nil
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT: %v", err)
+	}
+
+	claims, ok := jwtToken.Claims.(*jwt.RegisteredClaims)
+	if !ok {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT claims: %v", err)
+	}
+
+	return &token.ValidateTokenResponse{
+		Id: &common.UUID{Value: claims.ID},
 	}, nil
 }
 
@@ -112,8 +163,8 @@ func (s *Server) GetValidatedTokenData(_ context.Context, request *token.GetVali
 	}
 
 	jwtToken, err := s.jwtParser.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		if err := validateHMACMethod(token); err != nil {
+			return nil, err
 		}
 
 		return request.Secret, nil

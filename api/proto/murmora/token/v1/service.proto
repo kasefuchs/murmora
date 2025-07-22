@@ -10,7 +10,9 @@ import "murmora/token/v1/types.proto";
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;token";
 
 service TokenService {
-  rpc CreateToken(CreateTokenRequest) returns (CreateTokenResponse);
+  rpc SignToken(SignTokenRequest) returns (TokenResponse);
+  rpc CreateToken(CreateTokenRequest) returns (TokenResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
   rpc GetTokenData(GetTokenDataRequest) returns (TokenDataResponse);
   rpc GetValidatedTokenData(GetValidatedTokenDataRequest) returns (TokenDataResponse);
 }
