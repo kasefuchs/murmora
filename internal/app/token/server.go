@@ -47,7 +47,7 @@ func validateHMACMethod(token *jwt.Token) error {
 	return nil
 }
 
-func (s *Server) resolveTokenData(id string) (*token.TokenDataResponse, error) {
+func (s *Server) resolveTokenData(id string) (*token.TokenData, error) {
 	entity, err := s.repository.FindByID(id)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to find token: %v", err)
@@ -61,13 +61,13 @@ func (s *Server) resolveTokenData(id string) (*token.TokenDataResponse, error) {
 		return nil, status.Errorf(codes.Aborted, "failed to unmarshal payload: %v", err)
 	}
 
-	return &token.TokenDataResponse{
+	return &token.TokenData{
 		Id:      common.NewUUID(entity.ID),
 		Payload: &payload,
 	}, nil
 }
 
-func (s *Server) SignToken(_ context.Context, request *token.SignTokenRequest) (*token.TokenResponse, error) {
+func (s *Server) SignToken(_ context.Context, request *token.SignTokenRequest) (*token.SignTokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -77,13 +77,15 @@ func (s *Server) SignToken(_ context.Context, request *token.SignTokenRequest) (
 		return nil, status.Errorf(codes.InvalidArgument, "failed to sign JWT: %v", err)
 	}
 
-	return &token.TokenResponse{
-		Id:    request.Id,
-		Token: &common.JWT{Value: jwtToken},
+	return &token.SignTokenResponse{
+		Result: &token.TokenWithID{
+			Id:    request.Id,
+			Token: &common.JWT{Value: jwtToken},
+		},
 	}, nil
 }
 
-func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.TokenResponse, error) {
+func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenRequest) (*token.CreateTokenResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -107,9 +109,11 @@ func (s *Server) CreateToken(_ context.Context, request *token.CreateTokenReques
 		return nil, status.Errorf(codes.Unavailable, "failed to create token: %v", err)
 	}
 
-	return &token.TokenResponse{
-		Id:    common.NewUUID(id),
-		Token: &common.JWT{Value: jwtToken},
+	return &token.CreateTokenResponse{
+		Result: &token.TokenWithID{
+			Id:    common.NewUUID(id),
+			Token: &common.JWT{Value: jwtToken},
+		},
 	}, nil
 }
 
@@ -118,12 +122,12 @@ func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRe
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	jwtToken, err := s.jwtParser.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	jwtToken, err := s.jwtParser.ParseWithClaims(request.Data.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if err := validateHMACMethod(token); err != nil {
 			return nil, err
 		}
 
-		return request.Secret, nil
+		return request.Data.Secret, nil
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT: %v", err)
@@ -139,7 +143,7 @@ func (s *Server) ValidateToken(_ context.Context, request *token.ValidateTokenRe
 	}, nil
 }
 
-func (s *Server) GetTokenData(_ context.Context, request *token.GetTokenDataRequest) (*token.TokenDataResponse, error) {
+func (s *Server) GetTokenData(_ context.Context, request *token.GetTokenDataRequest) (*token.GetTokenDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -154,20 +158,25 @@ func (s *Server) GetTokenData(_ context.Context, request *token.GetTokenDataRequ
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT claims: %v", err)
 	}
 
-	return s.resolveTokenData(claims.ID)
+	tokenData, err := s.resolveTokenData(claims.ID)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to resolve token data: %v", err)
+	}
+
+	return &token.GetTokenDataResponse{Data: tokenData}, nil
 }
 
-func (s *Server) GetValidatedTokenData(_ context.Context, request *token.GetValidatedTokenDataRequest) (*token.TokenDataResponse, error) {
+func (s *Server) GetValidatedTokenData(_ context.Context, request *token.GetValidatedTokenDataRequest) (*token.GetValidatedTokenDataResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	jwtToken, err := s.jwtParser.ParseWithClaims(request.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
+	jwtToken, err := s.jwtParser.ParseWithClaims(request.Data.Token.Value, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if err := validateHMACMethod(token); err != nil {
 			return nil, err
 		}
 
-		return request.Secret, nil
+		return request.Data.Secret, nil
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT: %v", err)
@@ -178,5 +187,10 @@ func (s *Server) GetValidatedTokenData(_ context.Context, request *token.GetVali
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse JWT claims: %v", err)
 	}
 
-	return s.resolveTokenData(claims.ID)
+	tokenData, err := s.resolveTokenData(claims.ID)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "failed to resolve token data: %v", err)
+	}
+
+	return &token.GetValidatedTokenDataResponse{Data: tokenData}, nil
 }

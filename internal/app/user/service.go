@@ -29,7 +29,7 @@ func NewServer(db *database.Database) *Server {
 	}
 }
 
-func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.UserResponse, error) {
+func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) (*user.CreateUserResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -52,16 +52,18 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 		return nil, status.Errorf(codes.AlreadyExists, "user already exists: %v", err)
 	}
 
-	return &user.UserResponse{
-		Id:           common.NewUUID(entity.ID),
-		Name:         entity.Name,
-		Email:        entity.Email,
-		Flags:        common.BitFieldFromFlagSet(flagSet),
-		PasswordHash: entity.PasswordHash,
+	return &user.CreateUserResponse{
+		User: &user.User{
+			Id:           common.NewUUID(entity.ID),
+			Name:         entity.Name,
+			Email:        entity.Email,
+			Flags:        common.BitFieldFromFlagSet(flagSet),
+			PasswordHash: entity.PasswordHash,
+		},
 	}, nil
 }
 
-func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user.UserResponse, error) {
+func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user.GetUserResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -87,11 +89,13 @@ func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &user.UserResponse{
-		Id:           common.NewUUID(entity.ID),
-		Name:         entity.Name,
-		Email:        entity.Email,
-		Flags:        common.BitFieldFromFlagSet(entity.Flags),
-		PasswordHash: entity.PasswordHash,
+	return &user.GetUserResponse{
+		User: &user.User{
+			Id:           common.NewUUID(entity.ID),
+			Name:         entity.Name,
+			Email:        entity.Email,
+			Flags:        common.BitFieldFromFlagSet(entity.Flags),
+			PasswordHash: entity.PasswordHash,
+		},
 	}, nil
 }

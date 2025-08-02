@@ -51,7 +51,7 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 		return nil, status.Errorf(codes.NotFound, "failed to get user: %v", err)
 	}
 
-	userId, err := userData.Id.ToUUID()
+	userId, err := userData.User.Id.ToUUID()
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to parse user id: %v", err)
 	}
@@ -67,14 +67,14 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 	}
 
 	tokenData, err := s.tokenClient.CreateToken(ctx, &token.CreateTokenRequest{
-		Secret:  userData.PasswordHash,
+		Secret:  userData.User.PasswordHash,
 		Payload: payload,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to create token: %v", err)
 	}
 
-	tokenId, err := tokenData.Id.ToUUID()
+	tokenId, err := tokenData.Result.Id.ToUUID()
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to parse token id: %v", err)
 	}
@@ -90,7 +90,7 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 
 	return &session.CreateSessionResponse{
 		Id:    common.NewUUID(entity.ID),
-		Token: tokenData.Token,
+		Token: tokenData.Result.Token,
 	}, nil
 }
 

@@ -23,6 +23,10 @@ message RegisterRequest {
   }];
 }
 
+message RegisterResponse {
+  murmora.common.v1.JWT token = 1;
+}
+
 message LoginRequest {
   string email = 1 [(validate.rules).string.email = true];
   string password = 2 [(validate.rules).string = {
@@ -31,6 +35,6 @@ message LoginRequest {
   }];
 }
 
-message TokenResponse {
+message LoginResponse {
   murmora.common.v1.JWT token = 1;
 }

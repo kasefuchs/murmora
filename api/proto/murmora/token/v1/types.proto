@@ -12,14 +12,19 @@ import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;token";
 
-message TokenResponse {
-  murmora.common.v1.UUID id = 1;
-  murmora.common.v1.JWT token = 2;
+message TokenWithID {
+  murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
+  murmora.common.v1.JWT token = 2 [(validate.rules).message.required = true];
 }
 
-message TokenDataResponse {
-  murmora.common.v1.UUID id = 1;
-  google.protobuf.Any payload = 2;
+message TokenWithSecret {
+  murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
+  bytes secret = 2 [(validate.rules).bytes.min_len = 32];
+}
+
+message TokenData {
+  murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
+  google.protobuf.Any payload = 2 [(validate.rules).any.required = true];
 }
 
 message SignTokenRequest {
@@ -27,14 +32,21 @@ message SignTokenRequest {
   bytes secret = 2 [(validate.rules).bytes.min_len = 32];
 }
 
+message SignTokenResponse {
+  TokenWithID result = 1;
+}
+
 message CreateTokenRequest {
   google.protobuf.Any payload = 1 [(validate.rules).any.required = true];
   bytes secret = 2 [(validate.rules).bytes.min_len = 32];
 }
 
+message CreateTokenResponse {
+  TokenWithID result = 1;
+}
+
 message ValidateTokenRequest {
-  murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
-  bytes secret = 2 [(validate.rules).bytes.min_len = 32];
+  TokenWithSecret data = 1 [(validate.rules).message.required = true];
 }
 
 message ValidateTokenResponse {
@@ -45,7 +57,14 @@ message GetTokenDataRequest {
   murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
 }
 
+message GetTokenDataResponse {
+  TokenData data = 1;
+}
+
 message GetValidatedTokenDataRequest {
-  murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
-  bytes secret = 2 [(validate.rules).bytes.min_len = 32];
+  TokenWithSecret data = 1 [(validate.rules).message.required = true];
+}
+
+message GetValidatedTokenDataResponse {
+  TokenData data = 1;
 }

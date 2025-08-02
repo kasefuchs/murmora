@@ -15,7 +15,7 @@ enum UserFlag {
   USER_FLAG_UNSPECIFIED = 0;
 }
 
-message UserResponse {
+message User {
   murmora.common.v1.UUID id = 1;
   string name = 2;
   string email = 3;
@@ -33,6 +33,10 @@ message CreateUserRequest {
   bytes password_hash = 3 [(validate.rules).bytes.min_len = 1];
 }
 
+message CreateUserResponse {
+  User user = 1;
+}
+
 message GetUserRequest {
   oneof query {
     option (validate.required) = true;
@@ -45,4 +49,8 @@ message GetUserRequest {
     }];
     string email = 3 [(validate.rules).string.email = true];
   }
+}
+
+message GetUserResponse {
+  User user = 1;
 }

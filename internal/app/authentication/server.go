@@ -32,7 +32,7 @@ func NewServer(userClient user.UserServiceClient, sessionClient session.SessionS
 	}
 }
 
-func (s *Server) Register(ctx context.Context, request *authentication.RegisterRequest) (*authentication.TokenResponse, error) {
+func (s *Server) Register(ctx context.Context, request *authentication.RegisterRequest) (*authentication.RegisterResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -51,15 +51,15 @@ func (s *Server) Register(ctx context.Context, request *authentication.RegisterR
 		return nil, status.Errorf(codes.Unavailable, "failed to create user: %s", err.Error())
 	}
 
-	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.Id})
+	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.User.Id})
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "failed to create session: %s", err.Error())
 	}
 
-	return &authentication.TokenResponse{Token: sessionData.Token}, nil
+	return &authentication.RegisterResponse{Token: sessionData.Token}, nil
 }
 
-func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.TokenResponse, error) {
+func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest) (*authentication.LoginResponse, error) {
 	if err := request.Validate(); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
@@ -71,7 +71,7 @@ func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest
 		return nil, status.Errorf(codes.NotFound, "failed to get user: %v", err)
 	}
 
-	ok, err := argon2.VerifyEncoded([]byte(request.Password), userData.PasswordHash)
+	ok, err := argon2.VerifyEncoded([]byte(request.Password), userData.User.PasswordHash)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to verify password: %v", err)
 	}
@@ -79,10 +79,10 @@ func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest
 		return nil, status.Errorf(codes.Unauthenticated, "invalid password")
 	}
 
-	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.Id})
+	sessionData, err := s.sessionClient.CreateSession(ctx, &session.CreateSessionRequest{UserId: userData.User.Id})
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "failed to create session: %s", err.Error())
 	}
 
-	return &authentication.TokenResponse{Token: sessionData.Token}, nil
+	return &authentication.LoginResponse{Token: sessionData.Token}, nil
 }
