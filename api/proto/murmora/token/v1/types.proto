@@ -12,6 +12,16 @@ import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/token/v1;token";
 
+message TokenResponse {
+  murmora.common.v1.UUID id = 1;
+  murmora.common.v1.JWT token = 2;
+}
+
+message TokenDataResponse {
+  murmora.common.v1.UUID id = 1;
+  google.protobuf.Any payload = 2;
+}
+
 message SignTokenRequest {
   murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
   bytes secret = 2 [(validate.rules).bytes.min_len = 32];
@@ -38,14 +48,4 @@ message GetTokenDataRequest {
 message GetValidatedTokenDataRequest {
   murmora.common.v1.JWT token = 1 [(validate.rules).message.required = true];
   bytes secret = 2 [(validate.rules).bytes.min_len = 32];
-}
-
-message TokenResponse {
-  murmora.common.v1.UUID id = 1;
-  murmora.common.v1.JWT token = 2;
-}
-
-message TokenDataResponse {
-  murmora.common.v1.UUID id = 1;
-  google.protobuf.Any payload = 2;
 }

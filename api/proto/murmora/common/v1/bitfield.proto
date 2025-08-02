@@ -1,0 +1,14 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.common.v1;
+
+import "validate/validate.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/common/v1;common";
+
+message BitField {
+  int64 value = 1 [(validate.rules).int64.gte = 0];
+}

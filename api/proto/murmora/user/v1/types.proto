@@ -5,10 +5,23 @@ syntax = "proto3";
 
 package murmora.user.v1;
 
+import "murmora/common/v1/bitfield.proto";
 import "murmora/common/v1/uuid.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/user/v1;user";
+
+enum UserFlag {
+  USER_FLAG_UNSPECIFIED = 0;
+}
+
+message UserResponse {
+  murmora.common.v1.UUID id = 1;
+  string name = 2;
+  string email = 3;
+  bytes password_hash = 4;
+  murmora.common.v1.BitField flags = 5;
+}
 
 message CreateUserRequest {
   string name = 1 [(validate.rules).string = {
@@ -32,11 +45,4 @@ message GetUserRequest {
     }];
     string email = 3 [(validate.rules).string.email = true];
   }
-}
-
-message UserResponse {
-  murmora.common.v1.UUID id = 1;
-  string name = 2;
-  string email = 3;
-  bytes password_hash = 4;
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kasefuchs/murmora/api/proto/murmora/common/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
+	"github.com/kasefuchs/murmora/internal/pkg/bitflag"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,10 +39,13 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to generate UUID: %v", err)
 	}
 
+	flagSet := bitflag.NewFlagSet[user.UserFlag]()
+
 	entity, err := s.repository.Create(&User{
 		ID:           id,
 		Name:         request.Name,
 		Email:        request.Email,
+		Flags:        flagSet,
 		PasswordHash: request.PasswordHash,
 	})
 	if err != nil {
@@ -52,6 +56,7 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 		Id:           common.NewUUID(entity.ID),
 		Name:         entity.Name,
 		Email:        entity.Email,
+		Flags:        common.BitFieldFromFlagSet(flagSet),
 		PasswordHash: entity.PasswordHash,
 	}, nil
 }
@@ -86,6 +91,7 @@ func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user
 		Id:           common.NewUUID(entity.ID),
 		Name:         entity.Name,
 		Email:        entity.Email,
+		Flags:        common.BitFieldFromFlagSet(entity.Flags),
 		PasswordHash: entity.PasswordHash,
 	}, nil
 }

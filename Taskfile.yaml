@@ -14,6 +14,9 @@ tasks:
   format-proto:
     cmd: go run github.com/bufbuild/buf/cmd/buf format -w api/proto/
 
+  lint-proto:
+    cmd: go run github.com/bufbuild/buf/cmd/buf lint api/proto/
+
   generate-proto:
     cmd: go run github.com/bufbuild/buf/cmd/buf generate
 
