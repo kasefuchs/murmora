@@ -1,0 +1,41 @@
+# Copyright (c) Kasefuchs
+# SPDX-License-Identifier: MPL-2.0
+
+---
+repos:
+  - repo: local
+    hooks:
+      - id: copywrite-license-check
+        name: check repository license
+        entry: go run github.com/hashicorp/copywrite license --plan
+        language: system
+        always_run: true
+        pass_filenames: false
+
+      - id: copywrite-header-check
+        name: check copyright headers
+        entry: go run github.com/hashicorp/copywrite headers --plan
+        language: system
+        pass_filenames: false
+
+  - repo: local
+    hooks:
+      - id: gofumpt-check
+        name: check go formatting
+        entry: scripts/gofumpt-check.sh
+        types: [go]
+        language: script
+
+  - repo: local
+    hooks:
+      - id: buf-lint
+        name: lint protobuf api definitions
+        entry: go run github.com/bufbuild/buf/cmd/buf lint api/proto/
+        language: system
+        pass_filenames: false
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: check-added-large-files

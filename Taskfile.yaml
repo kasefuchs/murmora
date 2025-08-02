@@ -5,17 +5,17 @@
 version: 3
 
 tasks:
-  license-headers:
+  add-license-headers:
     cmd: go run github.com/hashicorp/copywrite headers
 
-  proto-fmt:
-    cmd: go run github.com/bufbuild/buf/cmd/buf format -w ./api/proto
+  validate-license:
+    cmd: go run github.com/hashicorp/copywrite license
 
-  proto-gen:
+  format-proto:
+    cmd: go run github.com/bufbuild/buf/cmd/buf format -w api/proto/
+
+  generate-proto:
     cmd: go run github.com/bufbuild/buf/cmd/buf generate
 
-  proto-lint:
-    cmd: go run github.com/bufbuild/buf/cmd/buf lint ./api/proto
-
-  go-fmt:
+  format-go:
     cmd: go run mvdan.cc/gofumpt -l -w .
