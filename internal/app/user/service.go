@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/kasefuchs/murmora/api/proto/murmora/common/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
-	"github.com/kasefuchs/murmora/internal/pkg/bitflag"
 	"github.com/kasefuchs/murmora/internal/pkg/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,14 +38,13 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to generate UUID: %v", err)
 	}
 
-	flagSet := bitflag.NewFlagSet[user.UserFlag]()
-
 	entity, err := s.repository.Create(&User{
-		ID:           id,
-		Name:         request.Name,
-		Email:        request.Email,
-		Flags:        flagSet,
-		PasswordHash: request.PasswordHash,
+		ID:     id,
+		Type:   request.Type,
+		Name:   request.Name,
+		Flags:  common.NewTypedBitField[user.UserFlag](request.Flags).ToFlagSet(),
+		Email:  request.Email,
+		Secret: request.Secret,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.AlreadyExists, "user already exists: %v", err)
@@ -54,11 +52,12 @@ func (s *Server) CreateUser(_ context.Context, request *user.CreateUserRequest) 
 
 	return &user.CreateUserResponse{
 		User: &user.User{
-			Id:           common.NewUUID(entity.ID),
-			Name:         entity.Name,
-			Email:        entity.Email,
-			Flags:        common.BitFieldFromFlagSet(flagSet),
-			PasswordHash: entity.PasswordHash,
+			Id:     common.NewUUID(entity.ID),
+			Type:   request.Type,
+			Name:   request.Name,
+			Flags:  request.Flags,
+			Email:  request.Email,
+			Secret: request.Secret,
 		},
 	}, nil
 }
@@ -91,11 +90,12 @@ func (s *Server) GetUser(_ context.Context, request *user.GetUserRequest) (*user
 
 	return &user.GetUserResponse{
 		User: &user.User{
-			Id:           common.NewUUID(entity.ID),
-			Name:         entity.Name,
-			Email:        entity.Email,
-			Flags:        common.BitFieldFromFlagSet(entity.Flags),
-			PasswordHash: entity.PasswordHash,
+			Id:     common.NewUUID(entity.ID),
+			Type:   entity.Type,
+			Name:   entity.Name,
+			Flags:  common.BitFieldFromFlagSet(entity.Flags),
+			Email:  entity.Email,
+			Secret: entity.Secret,
 		},
 	}, nil
 }

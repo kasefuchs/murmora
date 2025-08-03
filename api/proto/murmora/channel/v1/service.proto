@@ -1,0 +1,15 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.channel.v1;
+
+import "murmora/channel/v1/types.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/channel/v1;channel";
+
+service ChannelService {
+  rpc CreateChannel(CreateChannelRequest) returns (CreateChannelResponse);
+  rpc GetChannel(GetChannelRequest) returns (GetChannelResponse);
+}

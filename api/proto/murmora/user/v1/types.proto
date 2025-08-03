@@ -15,22 +15,32 @@ enum UserFlag {
   USER_FLAG_UNSPECIFIED = 0;
 }
 
+enum UserType {
+  USER_TYPE_UNSPECIFIED = 0;
+  USER_TYPE_STANDARD = 1;
+}
+
 message User {
   murmora.common.v1.UUID id = 1;
-  string name = 2;
-  string email = 3;
-  bytes password_hash = 4;
+  UserType type = 2;
+  string name = 3;
+  string email = 4;
   murmora.common.v1.BitField flags = 5;
+  bytes secret = 6;
 }
 
 message CreateUserRequest {
-  string name = 1 [(validate.rules).string = {
+  UserType type = 1 [(validate.rules).enum = {
+    not_in: [0]
+  }];
+  string name = 2 [(validate.rules).string = {
     min_len: 2
     max_len: 32
     pattern: "^[a-z0-9._]+$"
   }];
-  string email = 2 [(validate.rules).string.email = true];
-  bytes password_hash = 3 [(validate.rules).bytes.min_len = 1];
+  string email = 3 [(validate.rules).string.email = true];
+  murmora.common.v1.BitField flags = 4 [(validate.rules).message.required = true];
+  bytes secret = 5 [(validate.rules).bytes.min_len = 1];
 }
 
 message CreateUserResponse {

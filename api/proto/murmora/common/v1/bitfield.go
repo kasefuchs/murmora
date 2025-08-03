@@ -29,6 +29,10 @@ func (t *TypedBitField[T]) ToProto() *BitField {
 	}
 }
 
+func (t *TypedBitField[T]) ToFlagSet() *bitflag.FlagSet[T] {
+	return t.flagSet
+}
+
 func (t *TypedBitField[T]) Raw() int64 {
 	return t.flagSet.Raw()
 }

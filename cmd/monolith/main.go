@@ -7,10 +7,12 @@ import (
 	"flag"
 
 	"github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1"
+	"github.com/kasefuchs/murmora/api/proto/murmora/channel/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/token/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
 	authenticationService "github.com/kasefuchs/murmora/internal/app/authentication"
+	channelService "github.com/kasefuchs/murmora/internal/app/channel"
 	service "github.com/kasefuchs/murmora/internal/app/monolith"
 	sessionService "github.com/kasefuchs/murmora/internal/app/session"
 	tokenService "github.com/kasefuchs/murmora/internal/app/token"
@@ -30,7 +32,7 @@ func main() {
 	cfg.MustLoadConfigFile(*configFile)
 
 	db := database.MustNew(&cfg.Value.Database)
-	db.MustMigrate(&userService.User{}, &tokenService.Token{}, &sessionService.Session{})
+	db.MustMigrate(&userService.User{}, &tokenService.Token{}, &channelService.Channel{}, &sessionService.Session{})
 
 	userClient := client.MustNew(&cfg.Value.Client, user.NewUserServiceClient)
 	tokenClient := client.MustNew(&cfg.Value.Client, token.NewTokenServiceClient)
@@ -39,11 +41,13 @@ func main() {
 	server.MustServe(&cfg.Value.Server, func(srv *grpc.Server) {
 		userServer := userService.NewServer(db)
 		tokenServer := tokenService.NewServer(db)
+		channelServer := channelService.NewServer(db)
 		sessionServer := sessionService.NewServer(db, userClient, tokenClient)
 		authenticationServer := authenticationService.NewServer(userClient, sessionClient)
 
 		user.RegisterUserServiceServer(srv, userServer)
 		token.RegisterTokenServiceServer(srv, tokenServer)
+		channel.RegisterChannelServiceServer(srv, channelServer)
 		session.RegisterSessionServiceServer(srv, sessionServer)
 		authentication.RegisterAuthenticationServiceServer(srv, authenticationServer)
 	})

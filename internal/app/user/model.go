@@ -10,9 +10,10 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID                       `gorm:"primaryKey"`
-	Name         string                          `gorm:"uniqueIndex"`
-	Flags        *bitflag.FlagSet[user.UserFlag] `gorm:"not null"`
-	Email        string                          `gorm:"uniqueIndex"`
-	PasswordHash []byte                          `gorm:"not null"`
+	ID     uuid.UUID                       `gorm:"primaryKey"`
+	Type   user.UserType                   `gorm:"not null"`
+	Name   string                          `gorm:"uniqueIndex"`
+	Flags  *bitflag.FlagSet[user.UserFlag] `gorm:"not null"`
+	Email  string                          `gorm:"uniqueIndex"`
+	Secret []byte                          `gorm:"not null"`
 }

@@ -1,0 +1,51 @@
+// Copyright (c) Kasefuchs
+// SPDX-License-Identifier: MPL-2.0
+
+syntax = "proto3";
+
+package murmora.channel.v1;
+
+import "murmora/common/v1/bitfield.proto";
+import "murmora/common/v1/uuid.proto";
+import "validate/validate.proto";
+
+option go_package = "github.com/kasefuchs/murmora/api/proto/murmora/channel/v1;channel";
+
+enum ChannelFlag {
+  CHANNEL_FLAG_UNSPECIFIED = 0;
+}
+
+enum ChannelType {
+  CHANNEL_TYPE_UNSPECIFIED = 0;
+}
+
+message Channel {
+  murmora.common.v1.UUID id = 1;
+  ChannelType type = 2;
+  string name = 3;
+  murmora.common.v1.BitField flags = 4;
+}
+
+message CreateChannelRequest {
+  ChannelType type = 1 [(validate.rules).enum = {
+    not_in: [0]
+  }];
+  string name = 2 [(validate.rules).string = {
+    min_len: 2
+    max_len: 32
+    pattern: "^[a-z0-9._]+$"
+  }];
+  murmora.common.v1.BitField flags = 3 [(validate.rules).message.required = true];
+}
+
+message CreateChannelResponse {
+  Channel channel = 1;
+}
+
+message GetChannelRequest {
+  murmora.common.v1.UUID id = 1 [(validate.rules).message.required = true];
+}
+
+message GetChannelResponse {
+  Channel channel = 1;
+}

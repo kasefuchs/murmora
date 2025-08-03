@@ -7,8 +7,10 @@ import (
 	"context"
 
 	"github.com/kasefuchs/murmora/api/proto/murmora/authentication/v1"
+	"github.com/kasefuchs/murmora/api/proto/murmora/common/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/session/v1"
 	"github.com/kasefuchs/murmora/api/proto/murmora/user/v1"
+	"github.com/kasefuchs/murmora/internal/pkg/bitflag"
 	"github.com/matthewhartstonge/argon2"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -42,10 +44,14 @@ func (s *Server) Register(ctx context.Context, request *authentication.RegisterR
 		return nil, status.Errorf(codes.InvalidArgument, "password hash encoding failed: %s", err.Error())
 	}
 
+	bitFlag := bitflag.NewFlagSet[user.UserFlag]()
+
 	userData, err := s.userClient.CreateUser(ctx, &user.CreateUserRequest{
-		Name:         request.Name,
-		Email:        request.Email,
-		PasswordHash: passwordHash,
+		Type:   user.UserType_USER_TYPE_STANDARD,
+		Name:   request.Name,
+		Email:  request.Email,
+		Flags:  common.BitFieldFromFlagSet(bitFlag),
+		Secret: passwordHash,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Unavailable, "failed to create user: %s", err.Error())
@@ -71,7 +77,7 @@ func (s *Server) Login(ctx context.Context, request *authentication.LoginRequest
 		return nil, status.Errorf(codes.NotFound, "failed to get user: %v", err)
 	}
 
-	ok, err := argon2.VerifyEncoded([]byte(request.Password), userData.User.PasswordHash)
+	ok, err := argon2.VerifyEncoded([]byte(request.Password), userData.User.Secret)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "failed to verify password: %v", err)
 	}

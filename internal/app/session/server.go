@@ -67,7 +67,7 @@ func (s *Server) CreateSession(ctx context.Context, request *session.CreateSessi
 	}
 
 	tokenData, err := s.tokenClient.CreateToken(ctx, &token.CreateTokenRequest{
-		Secret:  userData.User.PasswordHash,
+		Secret:  userData.User.Secret,
 		Payload: payload,
 	})
 	if err != nil {
