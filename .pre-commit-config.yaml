@@ -7,14 +7,16 @@ repos:
     hooks:
       - id: copywrite-license-check
         name: check repository license
-        entry: go run github.com/hashicorp/copywrite license --plan
+        entry: go
+        args: [run, github.com/hashicorp/copywrite, license, --plan]
         language: system
         always_run: true
         pass_filenames: false
 
       - id: copywrite-header-check
         name: check copyright headers
-        entry: go run github.com/hashicorp/copywrite headers --plan
+        entry: go
+        args: [run, github.com/hashicorp/copywrite, headers, --plan]
         language: system
         pass_filenames: false
 
@@ -30,7 +32,8 @@ repos:
     hooks:
       - id: buf-lint
         name: lint protobuf api definitions
-        entry: go run github.com/bufbuild/buf/cmd/buf lint api/proto/
+        entry: go
+        args: [run, github.com/bufbuild/buf/cmd/buf, lint, api/proto/]
         language: system
         pass_filenames: false
 
@@ -38,4 +41,7 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+      - id: check-case-conflict
       - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
