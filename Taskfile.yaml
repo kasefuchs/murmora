@@ -22,3 +22,6 @@ tasks:
 
   format-go:
     cmd: go run mvdan.cc/gofumpt -l -w .
+
+  prettier-format:
+    cmd: pnpm prettier --write .

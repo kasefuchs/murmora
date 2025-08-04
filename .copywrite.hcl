@@ -18,6 +18,14 @@ project {
     # Protobuf artifacts
     "**/*.pb.go",
 
+    # --- Node ---
+    # Package stores
+    ".pnpm-store/**",
+    "node_modules/**",
+
+    # Lock files
+    "pnpm-lock.yaml",
+
     # --- Third party ---
     "third_party/**"
   ]

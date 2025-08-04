@@ -1,0 +1,21 @@
+<!--
+ Copyright (c) Kasefuchs
+ SPDX-License-Identifier: MPL-2.0
+-->
+<component name="ProjectRunConfigurationManager">
+  <configuration
+    default="false"
+    name="grpcui"
+    type="GoApplicationRunConfiguration"
+    factoryName="Go Application"
+  >
+    <module name="murmora" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="$Prompt$" />
+    <kind value="PACKAGE" />
+    <package value="github.com/fullstorydev/grpcui/cmd/grpcui" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+</component>

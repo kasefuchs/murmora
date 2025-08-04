@@ -10,3 +10,8 @@
 # --- Database ---
 # SQLite
 *.sqlite3
+
+# --- Node ---
+# Package stores
+.pnpm-store/
+node_modules/

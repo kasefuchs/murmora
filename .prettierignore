@@ -1,0 +1,9 @@
+# --- IDE / Editor ---
+.idea/
+.vscode/
+
+# --- Third party ---
+third_party/
+
+# --- Golang ---
+go.mod

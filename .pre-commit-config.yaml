@@ -30,6 +30,15 @@ repos:
 
   - repo: local
     hooks:
+      - id: prettier-check
+        name: check formatting with prettier
+        entry: pnpm
+        args: [prettier, --check, .]
+        language: system
+        pass_filenames: false
+
+  - repo: local
+    hooks:
       - id: buf-lint
         name: lint protobuf api definitions
         entry: go

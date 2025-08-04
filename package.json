@@ -1,0 +1,12 @@
+{
+  "name": "@kasefuchs/murmora",
+  "version": "1.0.0",
+  "private": true,
+  "author": "Kasefuchs",
+  "license": "MPL-2.0",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "@prettier/plugin-xml": "^3.4.2",
+    "prettier": "^3.6.2"
+  }
+}
