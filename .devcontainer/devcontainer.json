@@ -1,8 +1,10 @@
 {
   "name": "Murmora Development Container",
-  image: "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm",
   "mounts": ["type=bind,source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,readOnly=true"],
   "features": {
-   "ghcr.io/eitsupi/devcontainer-features/go-task:1": {}
-  }
+    "ghcr.io/devcontainers-extra/features/go-task:1": {},
+    "ghcr.io/devcontainers-extra/features/pre-commit:2": {}
+  },
+  "postCreateCommand": "pre-commit install"
 }
